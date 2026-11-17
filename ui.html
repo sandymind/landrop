@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LanDrop</title>
+<link rel="icon" href="/icon.ico">
+<style>
+:root{
+  --bg:#f4f5f7; --panel:#ffffff; --side:#fafbfc; --line:#e3e6ea; --text:#1d2330; --muted:#6b7380;
+  --accent:#2f6fed; --accent-2:#e9f0ff; --out:#2f6fed; --out-text:#fff; --in:#ffffff; --in-text:#1d2330;
+  --ok:#1f9d55; --bad:#d64545; --shadow:0 1px 2px rgba(0,0,0,.06),0 4px 16px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#15181d; --panel:#1c2027; --side:#181b21; --line:#2a2f38; --text:#e6e9ee; --muted:#8c94a1;
+    --accent:#5b8cff; --accent-2:#22304d; --out:#3a6ff0; --out-text:#fff; --in:#262b34; --in-text:#e6e9ee;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{font:14px/1.45 "Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(--text);display:flex;overflow:hidden}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+input,textarea{font:inherit;color:inherit}
+.side{width:270px;flex:none;background:var(--side);border-right:1px solid var(--line);display:flex;flex-direction:column}
+.me{padding:16px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.me .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#2f6fed,#16b3a5);display:grid;place-items:center;color:#fff;font-weight:700}
+.me .who{flex:1;min-width:0}
+.me .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.me .who small{color:var(--muted)}
+.iconbtn{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;color:var(--muted)}
+.iconbtn:hover{background:var(--accent-2);color:var(--accent)}
+.label{padding:14px 16px 6px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.peers{flex:1;overflow:auto;padding:0 8px 8px}
+.peer{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;width:100%;text-align:left}
+.peer:hover{background:var(--accent-2)}
+.peer.active{background:var(--accent-2)}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--line);display:grid;place-items:center;font-weight:600;position:relative;flex:none}
+.avatar .dot{position:absolute;right:0;bottom:0;width:11px;height:11px;border-radius:50%;background:#9aa1ab;border:2px solid var(--side)}
+.avatar .dot.on{background:var(--ok)}
+.peer .info{flex:1;min-width:0}
+.peer .info b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.peer .info small{color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block}
+.badge{background:var(--accent);color:#fff;border-radius:10px;font-size:11px;padding:1px 7px;font-weight:600}
+.empty-peers{padding:16px;color:var(--muted);font-size:13px}
+.main{flex:1;display:flex;flex-direction:column;min-width:0;position:relative}
+.head{height:62px;flex:none;display:flex;align-items:center;gap:12px;padding:0 18px;border-bottom:1px solid var(--line);background:var(--panel)}
+.head .t{flex:1;min-width:0}
+.head .t b{display:block}
+.head .t small{color:var(--muted)}
+.msgs{flex:1;overflow:auto;padding:18px 22px;display:flex;flex-direction:column;gap:6px}
+.day{align-self:center;font-size:12px;color:var(--muted);margin:10px 0 4px}
+.row{display:flex;flex-direction:column;max-width:72%}
+.row.out{align-self:flex-end;align-items:flex-end}
+.row.in{align-self:flex-start;align-items:flex-start}
+.bubble{padding:9px 13px;border-radius:16px;box-shadow:var(--shadow);white-space:pre-wrap;word-break:break-word;position:relative}
+.out .bubble{background:var(--out);color:var(--out-text);border-bottom-right-radius:5px}
+.in .bubble{background:var(--in);color:var(--in-text);border-bottom-left-radius:5px}
+.bubble a{color:inherit}
+.bubble.img{padding:4px;background:var(--in)}
+.bubble.img img{display:block;max-width:340px;max-height:300px;border-radius:12px;cursor:zoom-in}
+.file{display:flex;align-items:center;gap:12px;min-width:240px}
+.file .ext{width:40px;height:46px;border-radius:7px;background:rgba(255,255,255,.22);display:grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.in .file .ext{background:var(--accent-2);color:var(--accent)}
+.file .fn{font-weight:600;word-break:break-all;white-space:normal}
+.file small{opacity:.8}
+.bar{height:4px;border-radius:2px;background:rgba(127,127,127,.3);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:currentColor;width:0;transition:width .2s}
+.meta{font-size:11px;color:var(--muted);margin:2px 6px 6px;display:flex;gap:8px;align-items:center}
+.meta button{color:var(--accent);font-size:11px;padding:0}
+.meta button:hover{text-decoration:underline}
+.meta .bad{color:var(--bad)}
+.composer{flex:none;padding:12px 16px;border-top:1px solid var(--line);background:var(--panel);display:flex;gap:8px;align-items:flex-end}
+.composer textarea{flex:1;resize:none;border:1px solid var(--line);background:var(--bg);border-radius:12px;padding:10px 12px;max-height:180px;min-height:42px;outline:none}
+.composer textarea:focus{border-color:var(--accent)}
+.send{background:var(--accent);color:#fff;border-radius:12px;height:42px;padding:0 18px;font-weight:600}
+.send:disabled{opacity:.45;cursor:default}
+.placeholder{flex:1;display:grid;place-items:center;text-align:center;color:var(--muted);padding:30px}
+.placeholder h2{color:var(--text);margin:12px 0 6px;font-weight:600}
+.drop{position:absolute;inset:10px;border:3px dashed var(--accent);border-radius:16px;background:color-mix(in srgb,var(--panel) 85%,transparent);display:none;place-items:center;font-size:20px;font-weight:600;color:var(--accent);z-index:5;pointer-events:none}
+.drop.show{display:grid}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);display:none;place-items:center;z-index:10}
+.modal-bg.show{display:grid}
+.modal{background:var(--panel);border-radius:14px;width:min(520px,92vw);max-height:90vh;overflow:auto;padding:22px;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+.modal h3{margin:0 0 14px}
+.field{margin-bottom:14px}
+.field label{display:block;font-weight:600;margin-bottom:5px}
+.field small{color:var(--muted);display:block;margin-top:4px}
+.field input[type=text],.field input[type=password]{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);outline:none}
+.field input:focus{border-color:var(--accent)}
+.check{display:flex;gap:9px;align-items:center;margin-bottom:10px}
+.btns{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.btn{border:1px solid var(--line);border-radius:9px;padding:8px 13px;background:var(--bg)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.danger{color:var(--bad)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chip{background:var(--accent-2);border-radius:8px;padding:3px 8px;font-size:12px}
+.chip button{color:var(--bad);margin-left:4px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:8px 14px;border-radius:9px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:20}
+.toast.show{opacity:.92}
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;place-items:center;z-index:15;cursor:zoom-out}
+.lightbox.show{display:grid}
+.lightbox img{max-width:94vw;max-height:94vh}
+.offline-note{font-size:12px;color:var(--muted);text-align:center;padding:4px 0 0}
+</style>
+</head>
+<body>
+<aside class="side">
+  <div class="me">
+    <div class="logo">⇄</div>
+    <div class="who"><b id="myName">LanDrop</b><small id="myIp"></small></div>
+    <button class="iconbtn" id="settingsBtn" title="Pengaturan">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+  <div class="label">Perangkat</div>
+  <div class="peers" id="peers"></div>
+</aside>
+
+<main class="main" id="main">
+  <div class="placeholder" id="placeholder">
+    <div>
+      <div style="font-size:46px">⇄</div>
+      <h2>Pilih perangkat di kiri</h2>
+      <div>Buka LanDrop di laptop lain yang terhubung ke Wi-Fi/LAN yang sama.<br>Perangkat akan muncul otomatis dalam beberapa detik.</div>
+    </div>
+  </div>
+  <div class="head" id="head" hidden>
+    <div class="avatar" id="headAvatar"></div>
+    <div class="t"><b id="headName"></b><small id="headSub"></small></div>
+    <button class="iconbtn" id="attachTop" title="Kirim file">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    </button>
+    <button class="iconbtn" id="clearBtn" title="Hapus riwayat chat">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
+    </button>
+  </div>
+  <div class="msgs" id="msgs" hidden></div>
+  <div class="composer" id="composer" hidden>
+    <button class="iconbtn" id="attach" title="Kirim file (atau drag & drop / Ctrl+V)">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+    <textarea id="input" rows="1" placeholder="Ketik pesan, atau Ctrl+V gambar/file…  (Enter kirim, Shift+Enter baris baru)"></textarea>
+    <button class="send" id="sendBtn">Kirim</button>
+  </div>
+  <div class="drop" id="drop">Lepaskan untuk mengirim</div>
+  <input type="file" id="fileInput" multiple hidden>
+</main>
+
+<div class="modal-bg" id="settings">
+  <div class="modal">
+    <h3>Pengaturan</h3>
+    <div class="field"><label>Nama perangkat ini</label><input type="text" id="sName"></div>
+    <div class="field"><label>Kunci pasangan</label><input type="password" id="sKey" placeholder="(kosong)">
+      <small>Isi kunci yang <b>sama</b> di semua laptop Anda. Hanya perangkat dengan kunci yang sama yang bisa saling melihat dan mengirim.</small></div>
+    <div class="field"><label>Folder file yang diterima</label><input type="text" id="sDir"></div>
+    <label class="check"><input type="checkbox" id="sAuto"> Jalankan otomatis saat Windows menyala</label>
+    <label class="check"><input type="checkbox" id="sOpen"> Buka jendela LanDrop saat ada pesan/file masuk</label>
+    <div class="field"><label>Tambah perangkat manual (jika tidak muncul otomatis)</label>
+      <div style="display:flex;gap:6px"><input type="text" id="sManual" placeholder="contoh: 192.168.1.23"><button class="btn" id="addManual">Tambah</button></div>
+      <div class="chips" id="manualList"></div>
+      <small id="myIps"></small></div>
+    <div class="btns">
+      <button class="btn primary" id="saveSettings">Simpan</button>
+      <button class="btn" id="openSaveDir">Buka folder terima</button>
+      <button class="btn" id="closeSettings">Tutup</button>
+      <span style="flex:1"></span>
+      <button class="btn danger" id="quitBtn">Keluar LanDrop</button>
+    </div>
+    <small style="color:var(--muted);display:block;margin-top:12px" id="ver"></small>
+  </div>
+</div>
+<div class="lightbox" id="lightbox"><img id="lightImg" alt=""></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+const st = { me:null, peers:{}, known:{}, history:[], current:null, progress:{}, unread:{}, settings:{} };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const initials = n => (n||'?').split(/[\s\-_]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') || '?';
+const fmtSize = b => b < 1024 ? b+' B' : b < 1048576 ? (b/1024).toFixed(1)+' KB' : b < 1073741824 ? (b/1048576).toFixed(1)+' MB' : (b/1073741824).toFixed(2)+' GB';
+const fmtTime = ts => new Date(ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+const fmtDay = ts => new Date(ts).toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
+
+function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),1800); }
+async function api(path, body){
+  const r = await fetch(path,{method: body===undefined?'GET':'POST', headers:{'Content-Type':'application/json'}, body: body===undefined?undefined:JSON.stringify(body)});
+  const j = await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error || ('HTTP '+r.status));
+  return j;
+}
+
+// ---------- peers list
+function peerName(id){ return st.peers[id]?.name || st.known[id] || 'Perangkat'; }
+function renderPeers(){
+  const ids = new Set([...Object.keys(st.peers), ...st.history.map(m=>m.peer)]);
+  const lastTs = {};
+  for(const m of st.history) lastTs[m.peer] = Math.max(lastTs[m.peer]||0, m.ts);
+  const list = [...ids].filter(Boolean).sort((a,b)=> (!!st.peers[b]-!!st.peers[a]) || ((lastTs[b]||0)-(lastTs[a]||0)));
+  if(!list.length){ $('peers').innerHTML = '<div class="empty-peers">Mencari perangkat di jaringan…<br><br>Pastikan LanDrop terbuka di laptop lain, terhubung ke jaringan yang sama, dan memakai kunci pasangan yang sama.</div>'; return; }
+  $('peers').innerHTML = list.map(id=>{
+    const p = st.peers[id], last = [...st.history].reverse().find(m=>m.peer===id);
+    const sub = last ? (last.type==='text' ? last.text : '📎 '+last.name) : (p ? p.ip : '');
+    return `<button class="peer ${id===st.current?'active':''}" data-id="${esc(id)}">
+      <div class="avatar">${esc(initials(peerName(id)))}<span class="dot ${p?'on':''}"></span></div>
+      <div class="info"><b>${esc(peerName(id))}</b><small>${esc(sub)}</small></div>
+      ${st.unread[id]?`<span class="badge">${st.unread[id]}</span>`:''}</button>`;
+  }).join('');
+  document.querySelectorAll('.peer').forEach(b=>b.onclick=()=>select(b.dataset.id));
+}
+
+function select(id){
+  st.current = id; st.unread[id] = 0;
+  $('placeholder').hidden = true; $('head').hidden = $('msgs').hidden = $('composer').hidden = false;
+  renderHead(); renderPeers(); renderMsgs(true); $('input').focus();
+}
+function renderHead(){
+  const id = st.current; if(!id) return; const p = st.peers[id];
+  $('headName').textContent = peerName(id);
+  $('headAvatar').innerHTML = esc(initials(peerName(id))) + `<span class="dot ${p?'on':''}"></span>`;
+  $('headSub').textContent = p ? `Online · ${p.ip}` : 'Offline — pesan tidak bisa dikirim sampai perangkat online';
+  $('sendBtn').disabled = !p;
+}
+
+// ---------- messages
+function msgHtml(m){
+  const prog = st.progress[m.id];
+  let body;
+  if(m.type==='text'){
+    body = `<div class="bubble">${linkify(m.text)}</div>`;
+  } else if((m.mime||'').startsWith('image/') && m.path && (m.status==='received'||m.status==='sent')){
+    body = `<div class="bubble img"><img src="/api/file/${m.id}" data-id="${m.id}" alt="${esc(m.name)}" loading="lazy"></div>`;
+  } else {
+    const ext = (m.name.split('.').pop()||'').slice(0,4).toUpperCase();
+    const busy = m.status==='sending'||m.status==='receiving';
+    const pct = busy && prog ? Math.round(prog.done/Math.max(prog.total,1)*100) : (busy?0:100);
+    const extra = busy && prog ? ` · ${pct}% · ${fmtSize(prog.speed)}/s` : '';
+    body = `<div class="bubble"><div class="file"><div class="ext">${esc(ext||'FILE')}</div><div style="min-width:0;flex:1">
+      <div class="fn">${esc(m.name)}</div><small>${fmtSize(m.size||0)}${extra}</small>
+      ${busy?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</div></div></div>`;
+  }
+  const acts = [];
+  if(m.type==='text') acts.push(`<button data-act="copy" data-id="${m.id}">Salin</button>`);
+  if(m.type==='file' && m.path && (m.status==='received'||m.status==='sent')){
+    if((m.mime||'').startsWith('image/')) acts.push(`<button data-act="copyimg" data-id="${m.id}">Salin gambar</button>`);
+    acts.push(`<button data-act="open" data-id="${m.id}">Buka</button>`);
+    acts.push(`<button data-act="folder" data-id="${m.id}">Tampilkan di folder</button>`);
+  }
+  const status = m.status==='failed' ? `<span class="bad" title="${esc(m.error||'')}">Gagal${m.error?': '+esc(m.error).slice(0,80):''}</span>`
+    : m.status==='sending' ? 'Mengirim…' : m.status==='receiving' ? 'Menerima…' : m.dir==='out' ? '✓ Terkirim' : '';
+  return `<div class="row ${m.dir}" id="m-${m.id}">${body}<div class="meta"><span>${fmtTime(m.ts)}</span>${status?`<span>${status}</span>`:''}${acts.join('')}</div></div>`;
+}
+function renderMsgs(scroll){
+  const box = $('msgs'); const near = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+  const ms = st.history.filter(m=>m.peer===st.current);
+  let html = '', lastDay = '';
+  for(const m of ms){ const d = fmtDay(m.ts); if(d!==lastDay){ html += `<div class="day">${d}</div>`; lastDay=d; } html += msgHtml(m); }
+  if(!ms.length) html = `<div class="placeholder"><div>Belum ada pesan.<br>Ketik teks, tempel (Ctrl+V) gambar, atau seret file ke sini.</div></div>`;
+  box.innerHTML = html;
+  if(scroll || near){ box.scrollTop = box.scrollHeight; box.querySelectorAll('img').forEach(i=>i.onload=()=>{ box.scrollTop = box.scrollHeight; }); }
+}
+function patchMsg(m){
+  const el = document.getElementById('m-'+m.id);
+  if(el){ el.outerHTML = msgHtml(m); } else { renderMsgs(false); }
+  const box=$('msgs'); if(box.scrollHeight - box.scrollTop - box.clientHeight < 200) box.scrollTop = box.scrollHeight;
+}
+
+$('msgs').addEventListener('click', async e=>{
+  const img = e.target.closest('img[data-id]');
+  if(img){ $('lightImg').src = img.src; $('lightbox').classList.add('show'); return; }
+  const b = e.target.closest('button[data-act]'); if(!b) return;
+  const m = st.history.find(x=>x.id===b.dataset.id); if(!m) return;
+  try{
+    if(b.dataset.act==='copy'){ await navigator.clipboard.writeText(m.text); toast('Teks disalin'); }
+    else if(b.dataset.act==='copyimg'){ await copyImage(m); toast('Gambar disalin'); }
+    else await api('/api/open',{id:m.id, what:b.dataset.act==='folder'?'folder':'file'});
+  }catch(err){ toast('Gagal: '+err.message); }
+});
+$('lightbox').onclick = ()=>$('lightbox').classList.remove('show');
+
+async function copyImage(m){
+  let blob = await (await fetch('/api/file/'+m.id)).blob();
+  if(blob.type !== 'image/png'){
+    const bmp = await createImageBitmap(blob); const c = document.createElement('canvas');
+    c.width = bmp.width; c.height = bmp.height; c.getContext('2d').drawImage(bmp,0,0);
+    blob = await new Promise(r=>c.toBlob(r,'image/png'));
+  }
+  await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+}
+
+// ---------- sending
+async function sendText(){
+  const t = $('input').value; if(!t.trim() || !st.current) return;
+  if(!st.peers[st.current]){ toast('Perangkat sedang offline'); return; }
+  $('input').value=''; autosize();
+  try{ await api('/api/send-text',{peer:st.current, text:t}); }catch(e){ toast('Gagal: '+e.message); }
+}
+const queueFiles = []; let sending = false;
+function sendFiles(files){
+  if(!st.current){ toast('Pilih perangkat dulu'); return; }
+  if(!st.peers[st.current]){ toast('Perangkat sedang offline'); return; }
+  for(const f of files) queueFiles.push({f, peer:st.current});
+  pump();
+}
+async function pump(){
+  if(sending) return; sending = true;
+  while(queueFiles.length){
+    const {f, peer} = queueFiles.shift();
+    let name = f.name || 'file';
+    if((!f.name || f.name==='image.png') && (f.type||'').startsWith('image/')){
+      const d = new Date(), p = n=>String(n).padStart(2,'0');
+      name = `tempel-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.${(f.type.split('/')[1]||'png').replace('jpeg','jpg')}`;
+    }
+    const url = `/api/send-file?peer=${encodeURIComponent(peer)}&name=${encodeURIComponent(name)}&mime=${encodeURIComponent(f.type||'application/octet-stream')}`;
+    try{ const r = await fetch(url,{method:'POST', headers:{'Content-Type':'application/octet-stream'}, body:f}); if(!r.ok){ const j=await r.json().catch(()=>({})); toast('Gagal kirim '+name+': '+(j.error||r.status)); } }
+    catch(e){ toast('Gagal kirim '+name); }
+  }
+  sending = false;
+}
+
+const input = $('input');
+function autosize(){ input.style.height='auto'; input.style.height=Math.min(input.scrollHeight,180)+'px'; }
+input.addEventListener('input', autosize);
+input.addEventListener('keydown', e=>{ if(e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); sendText(); } });
+$('sendBtn').onclick = sendText;
+$('attach').onclick = $('attachTop').onclick = ()=>$('fileInput').click();
+$('fileInput').onchange = e=>{ sendFiles([...e.target.files]); e.target.value=''; };
+document.addEventListener('paste', e=>{
+  if($('settings').classList.contains('show')) return;
+  const files = [...(e.clipboardData?.files||[])];
+  if(files.length){ e.preventDefault(); sendFiles(files); }
+});
+let dragDepth = 0;
+const main = $('main');
+main.addEventListener('dragenter', e=>{ if(!st.current || !e.dataTransfer.types.includes('Files')) return; e.preventDefault(); dragDepth++; $('drop').classList.add('show'); });
+main.addEventListener('dragover', e=>{ if(st.current) e.preventDefault(); });
+main.addEventListener('dragleave', ()=>{ if(--dragDepth<=0){ dragDepth=0; $('drop').classList.remove('show'); } });
+main.addEventListener('drop', e=>{ e.preventDefault(); dragDepth=0; $('drop').classList.remove('show'); const f=[...e.dataTransfer.files]; if(f.length) sendFiles(f); });
+window.addEventListener('dragover', e=>e.preventDefault()); window.addEventListener('drop', e=>e.preventDefault());
+
+$('clearBtn').onclick = async ()=>{
+  if(!st.current || !confirm('Hapus riwayat chat dengan '+peerName(st.current)+'? (File yang sudah diterima tidak dihapus)')) return;
+  await api('/api/clear',{peer:st.current});
+};
+
+// ---------- settings
+function fillSettings(){
+  const s = st.settings;
+  $('sName').value = st.me?.name||''; $('sKey').value = s.key||''; $('sDir').value = s.save_dir||'';
+  $('sAuto').checked = !!s.autostart; $('sOpen').checked = !!s.open_on_receive;
+  $('manualList').innerHTML = (s.manual||[]).map(a=>`<span class="chip">${esc(a)}<button data-rm="${esc(a)}">✕</button></span>`).join('');
+  $('manualList').querySelectorAll('button').forEach(b=>b.onclick=async()=>{ const r=await api('/api/settings',{remove_manual:b.dataset.rm}); st.settings=r.settings; fillSettings(); });
+  $('myIps').textContent = 'Alamat IP laptop ini: ' + ((st.me?.ips||[]).join(', ') || '-');
+  $('ver').textContent = 'LanDrop v' + (st.me?.version||'') + (s.installed?' · terinstall':' · mode portable');
+}
+$('settingsBtn').onclick = ()=>{ fillSettings(); $('settings').classList.add('show'); };
+$('closeSettings').onclick = ()=>$('settings').classList.remove('show');
+$('saveSettings').onclick = async ()=>{
+  try{
+    const r = await api('/api/settings',{name:$('sName').value, key:$('sKey').value, save_dir:$('sDir').value,
+      autostart:$('sAuto').checked, open_on_receive:$('sOpen').checked});
+    st.settings = r.settings; $('settings').classList.remove('show'); toast('Tersimpan');
+  }catch(e){ toast('Gagal: '+e.message); }
+};
+$('addManual').onclick = async ()=>{
+  const v = $('sManual').value.trim(); if(!v) return;
+  const r = await api('/api/settings',{add_manual:v}); st.settings=r.settings; $('sManual').value=''; fillSettings(); toast('Ditambahkan, menghubungkan…');
+};
+$('openSaveDir').onclick = ()=>api('/api/open',{what:'savedir'});
+$('quitBtn').onclick = async ()=>{
+  if(!confirm('Keluar dari LanDrop? Laptop ini tidak akan bisa menerima file sampai LanDrop dibuka lagi.')) return;
+  await api('/api/quit',{}).catch(()=>{}); document.body.innerHTML='<div class="placeholder">LanDrop sudah ditutup. Jendela ini boleh ditutup.</div>';
+};
+
+// ---------- realtime
+function setPeers(d){ st.peers = Object.fromEntries(d.peers.map(p=>[p.id,p])); st.known = d.known||st.known; renderPeers(); renderHead(); }
+function notify(m){
+  if(!document.hidden && st.current===m.peer) return;
+  if('Notification' in window && Notification.permission==='granted'){
+    const n = new Notification(peerName(m.peer), {body: m.type==='text'? m.text.slice(0,140) : '📎 '+m.name, icon:'/icon.ico'});
+    n.onclick = ()=>{ window.focus(); select(m.peer); };
+  }
+}
+document.addEventListener('click', ()=>{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }, {once:true});
+
+async function boot(){
+  const s = await api('/api/state');
+  st.me = s.me; st.history = s.history; st.settings = s.settings; st.known = s.known;
+  st.peers = Object.fromEntries(s.peers.map(p=>[p.id,p]));
+  $('myName').textContent = s.me.name; $('myIp').textContent = (s.me.ips||[])[0] || 'tidak ada jaringan';
+  renderPeers();
+  if(st.current) select(st.current); else { const first = Object.keys(st.peers)[0]; if(first) select(first); }
+}
+const es = new EventSource('/api/events');
+es.onopen = ()=>boot();
+es.addEventListener('peers', e=>setPeers(JSON.parse(e.data)));
+es.addEventListener('settings', e=>{ const d=JSON.parse(e.data); st.settings=d.settings; st.me=d.me; $('myName').textContent=d.me.name; });
+es.addEventListener('cleared', e=>{ const d=JSON.parse(e.data); st.history = st.history.filter(m=>m.peer!==d.peer); renderPeers(); if(st.current===d.peer) renderMsgs(true); });
+es.addEventListener('progress', e=>{
+  const d = JSON.parse(e.data); st.progress[d.id]=d;
+  const m = st.history.find(x=>x.id===d.id); if(m && m.peer===st.current) patchMsg(m);
+});
+es.addEventListener('msg', e=>{
+  const m = JSON.parse(e.data); const i = st.history.findIndex(x=>x.id===m.id);
+  const isNew = i<0;
+  if(isNew) st.history.push(m); else st.history[i]=m;
+  if(m.status!=='sending' && m.status!=='receiving') delete st.progress[m.id];
+  if(isNew && m.dir==='in'){
+    if(st.current!==m.peer || document.hidden) st.unread[m.peer]=(st.unread[m.peer]||0)+1;
+    if(!st.current) select(m.peer);
+    notify(m);
+  }
+  if(m.peer===st.current){ isNew ? renderMsgs(m.dir==='out') : patchMsg(m); }
+  renderPeers();
+});
+document.addEventListener('visibilitychange', ()=>{ if(!document.hidden && st.current){ st.unread[st.current]=0; renderPeers(); } });
+</script>
+</body>
+</html>
