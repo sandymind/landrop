@@ -17,7 +17,13 @@ Setelah laptop baru ter-install, selanjutnya cukup kirim `LanDrop.exe` versi bar
 - **Gambar/screenshot**: tekan **Ctrl+V** di jendela chat (misalnya setelah Win+Shift+S).
 - **File**: drag & drop ke jendela chat, atau tombol **+**. Ukuran tidak dibatasi.
 - File diterima tersimpan di `Downloads\LanDrop` (bisa diubah di Pengaturan ⚙).
-- Menutup jendela tidak mematikan LanDrop — tetap bisa menerima file. Untuk benar-benar keluar: ⚙ → **Keluar LanDrop**.
+- Menutup jendela tidak mematikan LanDrop — tetap bisa menerima file, dan icon ⇄ tetap ada di tray taskbar.
+
+## Tray icon
+- **Klik kiri** icon ⇄ di tray: buka jendela LanDrop.
+- **Klik kanan**: buka folder file diterima, lihat jumlah perangkat online, atur autostart, atau **Keluar**.
+- Saat jendela tertutup, pesan/file masuk muncul sebagai notifikasi Windows. Klik notifikasinya untuk membuka chat.
+- Di Windows 10/11 icon baru biasanya tersembunyi di balik tombol **^**. Seret icon ⇄ ke taskbar agar selalu terlihat.
 
 ## Pengaturan penting (⚙)
 - **Kunci pasangan**: isi kata kunci yang sama di semua laptop Anda. Laptop lain di jaringan (misal Wi-Fi kantor) yang tidak tahu kuncinya tidak bisa melihat atau mengirim ke Anda.
@@ -36,4 +42,4 @@ Transfer tidak dienkripsi. Pakai di jaringan yang Anda percaya (rumah, hotspot s
 
 ## Build ulang dari source
 Butuh Python 3.10+. Jalankan `build.bat` → hasil di `dist\LanDrop.exe`.
-File: `landrop.py` (server, discovery, installer), `ui.html` (tampilan), `make_icon.py` (icon).
+File: `landrop.py` (server, discovery, installer), `tray.py` (tray icon), `ui.html` (tampilan), `make_icon.py` (icon).

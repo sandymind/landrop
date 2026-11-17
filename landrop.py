@@ -21,7 +21,7 @@ import webbrowser
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 APP = "LanDrop"
-VERSION = "1.0.0"
+VERSION = "1.1.0"
 HTTP_PORT = int(os.environ.get("LANDROP_PORT", "47801"))
 UDP_PORT = int(os.environ.get("LANDROP_UDP", "47800"))
 DATA_DIR = os.environ.get("LANDROP_DATA") or os.path.join(
@@ -153,10 +153,12 @@ class State:
     def emit(self, event, data):
         for q in list(self.subs):
             q.put((event, data))
+        if event in ("peers", "settings"):
+            update_tray_tip()
 
     def me(self):
         return {"id": self.cfg["id"], "name": self.cfg["name"], "port": HTTP_PORT,
-                "ips": local_ips(), "version": VERSION}
+                "ips": local_ips(), "version": VERSION, "tray": bool(TRAY and TRAY.ok)}
 
     def public_peers(self):
         with self.lock:
@@ -213,6 +215,7 @@ class State:
 
 
 S = None  # State
+TRAY = None  # tray.Tray
 _last_auto_open = 0
 
 
@@ -221,6 +224,60 @@ def maybe_open_window():
     if S.cfg.get("open_on_receive") and not S.subs and time.time() - _last_auto_open > 15:
         _last_auto_open = time.time()
         open_window()
+
+
+# ---------------------------------------------------------------- tray icon
+def update_tray_tip():
+    if TRAY and S:
+        n = len(S.peers)
+        TRAY.set_tooltip(f"LanDrop – {S.cfg['name']}\n" +
+                         (f"{n} perangkat online" if n else "Belum ada perangkat online"))
+
+
+def notify_incoming(pid, text):
+    """Notifikasi balon jika jendela LanDrop sedang tidak terbuka."""
+    if TRAY and not S.subs:
+        TRAY.balloon(S.cfg["known"].get(pid) or "LanDrop", text)
+
+
+def open_save_dir():
+    os.makedirs(S.cfg["save_dir"], exist_ok=True)
+    reveal(S.cfg["save_dir"])
+
+
+def quit_app():
+    if TRAY:
+        TRAY.remove()
+    os._exit(0)
+
+
+def tray_menu():
+    auto = get_autostart()
+    n = len(S.peers)
+    return [
+        ("Buka LanDrop", open_window),
+        ("Buka folder file diterima", open_save_dir),
+        None,
+        (f"{n} perangkat online" if n else "Belum ada perangkat online", None),
+        ("Jalankan saat Windows menyala", lambda: (set_autostart(not auto),
+                                                    S.emit("settings", {"settings": S.settings(), "me": S.me()})), auto),
+        None,
+        ("Keluar", quit_app),
+    ]
+
+
+def start_tray():
+    global TRAY
+    if os.environ.get("LANDROP_NOTRAY"):
+        return
+    try:
+        import tray
+        TRAY = tray.Tray(resource("icon.ico"), "LanDrop", tray_menu, on_balloon_click=open_window)
+        if not TRAY.start():
+            TRAY = None
+        update_tray_tip()
+    except Exception:
+        TRAY = None
 
 
 # ---------------------------------------------------------------- discovery
@@ -509,8 +566,7 @@ class Handler(BaseHTTPRequestHandler):
                 b = self.read_json()
                 m = S.find_msg(b.get("id", ""))
                 if b.get("what") == "savedir":
-                    os.makedirs(S.cfg["save_dir"], exist_ok=True)
-                    reveal(S.cfg["save_dir"])
+                    open_save_dir()
                 elif m and m.get("path") and os.path.exists(m["path"]):
                     if b.get("what") == "folder":
                         reveal(m["path"])
@@ -528,7 +584,7 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json({"ok": True})
             if path == "/api/quit":
                 self.send_json({"ok": True})
-                threading.Thread(target=lambda: (time.sleep(0.3), os._exit(0)), daemon=True).start()
+                threading.Thread(target=lambda: (time.sleep(0.3), quit_app()), daemon=True).start()
                 return
             self.fail(404, "not found")
         except Exception as e:
@@ -658,6 +714,7 @@ class Handler(BaseHTTPRequestHandler):
         S.add_msg({"id": b.get("id") or uuid.uuid4().hex, "peer": pid, "dir": "in", "type": "text",
                    "text": b.get("text", ""), "ts": now_ms(), "status": "received"})
         self.send_json({"ok": True})
+        notify_incoming(pid, b.get("text", ""))
         maybe_open_window()
 
     def peer_file(self):
@@ -689,6 +746,7 @@ class Handler(BaseHTTPRequestHandler):
                                             "speed": done / max(time.time() - t0, 0.001)})
             os.replace(part, path)
             S.update_msg(m, status="received")
+            notify_incoming(pid, f"📎 {m['name']} ({length / 1048576:.1f} MB) diterima")
             self.send_json({"ok": True})
         except Exception as e:
             try:
@@ -826,6 +884,7 @@ def main():
     server.daemon_threads = True
     threading.Thread(target=discovery_loop, daemon=True).start()
     threading.Thread(target=manual_loop, daemon=True).start()
+    start_tray()
     if not background:
         threading.Timer(0.3, open_window).start()
     if not FROZEN:
