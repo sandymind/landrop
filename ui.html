@@ -460,7 +460,7 @@ async function boot(){
   st.peers = Object.fromEntries(s.peers.map(p=>[p.id,p]));
   $('myName').textContent = s.me.name; $('myIp').textContent = (s.me.ips||[])[0] || 'tidak ada jaringan';
   renderPeers();
-  if(location.hash==='#about') showAbout();
+  if(location.hash==='#about' || s.show_about) showAbout();
   if(st.current) select(st.current); else { const first = Object.keys(st.peers)[0]; if(first) select(first); }
 }
 const es = new EventSource('/api/events');

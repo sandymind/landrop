@@ -114,6 +114,7 @@ class State:
         self.peers = {}
         self.subs = []
         self._dirty = False
+        self.about_shown = False  # dialog Tentang tampil sekali tiap aplikasi dijalankan
         self.save_cfg()
         threading.Thread(target=self._saver, daemon=True).start()
 
@@ -544,8 +545,9 @@ class Handler(BaseHTTPRequestHandler):
         elif path == "/api/state":
             with S.lock:
                 hist = list(S.history[-3000:])
+                show_about, S.about_shown = not S.about_shown, True
             self.send_json({"me": S.me(), "peers": S.public_peers(), "known": S.cfg["known"],
-                            "history": hist, "settings": S.settings()})
+                            "history": hist, "settings": S.settings(), "show_about": show_about})
         elif path == "/api/events":
             self.sse()
         elif path.startswith("/api/file/"):
