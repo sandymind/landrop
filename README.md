@@ -29,6 +29,9 @@ Setelah laptop baru ter-install, selanjutnya cukup kirim `LanDrop.exe` versi bar
 - Saat jendela tertutup, pesan/file masuk muncul sebagai notifikasi Windows. Klik notifikasinya untuk membuka chat.
 - Di Windows 10/11 icon baru biasanya tersembunyi di balik tombol **^**. Seret icon ⇄ ke taskbar agar selalu terlihat.
 
+## Bahasa / Language
+Default **English**. Ganti ke **Bahasa Indonesia** di ⚙ Settings → Language; berlaku langsung, termasuk menu tray dan notifikasi. Halaman ditandai *notranslate*, jadi Edge tidak lagi menawarkan terjemahan.
+
 ## Pengaturan penting (⚙)
 - **Kunci pasangan**: isi kata kunci yang sama di semua laptop Anda. Laptop lain di jaringan (misal Wi-Fi kantor) yang tidak tahu kuncinya tidak bisa melihat atau mengirim ke Anda.
 - **Tambah perangkat manual**: jika laptop tidak muncul otomatis (beberapa router/Wi-Fi kantor memblokir broadcast), masukkan IP laptop tujuan — IP-nya tertera di Pengaturan laptop tersebut.

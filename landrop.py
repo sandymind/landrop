@@ -22,11 +22,70 @@ from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 APP = "LanDrop"
-VERSION = "1.2.0"
+VERSION = "1.3.0"
 ALL = "all"  # id percakapan "Semua perangkat"
 # link yang boleh dibuka dari halaman About (di browser default)
 ABOUT_LINKS = {"website": "http://sandymind.my.id/", "donate": "https://saweria.co/sandymind",
                "github": "https://github.com/sandymind/landrop"}
+
+# ---------------------------------------------------------------- bahasa / language
+LANGS = ("en", "id")
+TEXT = {
+    "en": {
+        "n_online": "{n} device(s) online", "none_online": "No devices online",
+        "tray_open": "Open LanDrop", "tray_folder": "Open received files folder",
+        "tray_autostart": "Start with Windows", "tray_about": "About LanDrop", "tray_quit": "Quit",
+        "file_received": "📎 {name} ({mb:.1f} MB) received",
+        "offline": "Device is offline", "no_online": "No devices online",
+        "upload_cut": "upload interrupted", "conn_cut": "connection interrupted",
+        "rejected": "rejected by receiver: {msg}", "bad_key": "pairing key does not match",
+        "file_missing": "file not found", "bad_link": "unknown link",
+        "install_q": "Install LanDrop {v} on this computer?\n\n"
+                     "• Shortcuts on Desktop & Start Menu\n"
+                     "• Starts automatically with Windows (can be turned off)\n\n"
+                     "Choose 'No' to run without installing.",
+        "install_fail": "Could not copy LanDrop. Close the running LanDrop and try again.",
+        "uninstall_q": "Remove LanDrop from this computer?\n\nReceived files will not be deleted.",
+        "uninstalled": "LanDrop has been removed.",
+        "port_busy": "Port {port} is being used by another application.\n\n{err}",
+        "shortcut_desc": "Chat and send files between laptops",
+    },
+    "id": {
+        "n_online": "{n} perangkat online", "none_online": "Belum ada perangkat online",
+        "tray_open": "Buka LanDrop", "tray_folder": "Buka folder file diterima",
+        "tray_autostart": "Jalankan saat Windows menyala", "tray_about": "Tentang LanDrop", "tray_quit": "Keluar",
+        "file_received": "📎 {name} ({mb:.1f} MB) diterima",
+        "offline": "Perangkat sedang offline", "no_online": "Tidak ada perangkat online",
+        "upload_cut": "upload terputus", "conn_cut": "koneksi terputus",
+        "rejected": "ditolak penerima: {msg}", "bad_key": "kunci pasangan tidak cocok",
+        "file_missing": "file tidak ditemukan", "bad_link": "link tidak dikenal",
+        "install_q": "Install LanDrop {v} di komputer ini?\n\n"
+                     "• Shortcut di Desktop & Start Menu\n"
+                     "• Otomatis jalan saat Windows menyala (bisa dimatikan)\n\n"
+                     "Pilih 'No' untuk menjalankan tanpa install.",
+        "install_fail": "Gagal menyalin LanDrop. Tutup LanDrop yang sedang berjalan lalu coba lagi.",
+        "uninstall_q": "Hapus LanDrop dari komputer ini?\n\nFile yang sudah diterima tidak akan dihapus.",
+        "uninstalled": "LanDrop sudah dihapus.",
+        "port_busy": "Port {port} sedang dipakai aplikasi lain.\n\n{err}",
+        "shortcut_desc": "Chat dan kirim file antar laptop",
+    },
+}
+
+
+def current_lang():
+    if S:
+        return S.cfg.get("lang", "en")
+    try:  # sebelum aplikasi berjalan (installer): baca dari config jika ada
+        with open(os.path.join(DATA_DIR, "config.json"), encoding="utf-8") as f:
+            lang = json.load(f).get("lang", "en")
+        return lang if lang in LANGS else "en"
+    except Exception:
+        return "en"
+
+
+def T(key, **kw):
+    s = TEXT.get(current_lang(), TEXT["en"]).get(key) or TEXT["en"][key]
+    return s.format(**kw) if kw else s
 HTTP_PORT = int(os.environ.get("LANDROP_PORT", "47801"))
 UDP_PORT = int(os.environ.get("LANDROP_UDP", "47800"))
 DATA_DIR = os.environ.get("LANDROP_DATA") or os.path.join(
@@ -105,6 +164,7 @@ class State:
         self.cfg.setdefault("key", "")
         self.cfg.setdefault("save_dir", os.path.join(os.path.expanduser("~"), "Downloads", APP))
         self.cfg.setdefault("open_on_receive", True)
+        self.cfg.setdefault("lang", "en")
         self.cfg.setdefault("manual", [])
         self.cfg.setdefault("known", {})
         self.history = self._load(self.hist_path, [])
@@ -173,7 +233,7 @@ class State:
     def settings(self):
         c = self.cfg
         return {"name": c["name"], "key": c["key"], "save_dir": c["save_dir"],
-                "open_on_receive": c["open_on_receive"], "manual": c["manual"],
+                "open_on_receive": c["open_on_receive"], "manual": c["manual"], "lang": c["lang"],
                 "autostart": get_autostart(), "installed": is_installed_copy(),
                 "frozen": FROZEN}
 
@@ -237,7 +297,7 @@ def update_tray_tip():
     if TRAY and S:
         n = len(S.peers)
         TRAY.set_tooltip(f"LanDrop – {S.cfg['name']}\n" +
-                         (f"{n} perangkat online" if n else "Belum ada perangkat online"))
+                         (T("n_online", n=n) if n else T("none_online")))
 
 
 def notify_incoming(pid, text):
@@ -261,15 +321,15 @@ def tray_menu():
     auto = get_autostart()
     n = len(S.peers)
     return [
-        ("Buka LanDrop", open_window),
-        ("Buka folder file diterima", open_save_dir),
+        (T("tray_open"), open_window),
+        (T("tray_folder"), open_save_dir),
         None,
-        (f"{n} perangkat online" if n else "Belum ada perangkat online", None),
-        ("Jalankan saat Windows menyala", lambda: (set_autostart(not auto),
+        (T("n_online", n=n) if n else T("none_online"), None),
+        (T("tray_autostart"), lambda: (set_autostart(not auto),
                                                     S.emit("settings", {"settings": S.settings(), "me": S.me()})), auto),
         None,
-        ("Tentang LanDrop", lambda: open_window("#about")),
-        ("Keluar", quit_app),
+        (T("tray_about"), lambda: open_window("#about")),
+        (T("tray_quit"), quit_app),
     ]
 
 
@@ -390,7 +450,7 @@ def post_file(p, path, length, name, mime, m, on_chunk):
         r = conn.getresponse()
         body = r.read()
         if r.status != 200:
-            raise IOError(f"ditolak penerima: {body[:200].decode(errors='ignore')}")
+            raise IOError(T("rejected", msg=body[:200].decode(errors="ignore")))
     finally:
         conn.close()
 
@@ -518,7 +578,7 @@ class Handler(BaseHTTPRequestHandler):
         path, q = self.route()
         if path.startswith("/peer/"):
             if not self.peer_ok():
-                return self.fail(403, "kunci pasangan tidak cocok")
+                return self.fail(403, T("bad_key"))
             if path == "/peer/hello":
                 return self.send_json({"id": S.cfg["id"], "name": S.cfg["name"], "version": VERSION})
             return self.fail(404, "not found")
@@ -553,7 +613,7 @@ class Handler(BaseHTTPRequestHandler):
         elif path.startswith("/api/file/"):
             m = S.find_msg(path.rsplit("/", 1)[-1])
             if not m or not m.get("path") or not os.path.exists(m["path"]):
-                return self.fail(404, "file tidak ada")
+                return self.fail(404, T("file_missing"))
             self.serve_file(m["path"], m.get("mime") or "application/octet-stream")
         else:
             self.fail(404, "not found")
@@ -597,7 +657,7 @@ class Handler(BaseHTTPRequestHandler):
         path, q = self.route()
         if path.startswith("/peer/"):
             if not self.peer_ok():
-                return self.fail(403, "kunci pasangan tidak cocok")
+                return self.fail(403, T("bad_key"))
             if path == "/peer/text":
                 return self.peer_text()
             if path == "/peer/file":
@@ -615,7 +675,7 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/open-url":
                 url = ABOUT_LINKS.get(self.read_json().get("link", ""))
                 if not url:
-                    return self.fail(400, "link tidak dikenal")
+                    return self.fail(400, T("bad_link"))
                 webbrowser.open(url)
                 return self.send_json({"ok": True})
             if path == "/api/open":
@@ -629,7 +689,7 @@ class Handler(BaseHTTPRequestHandler):
                     else:
                         os.startfile(m["path"])
                 else:
-                    return self.fail(404, "file tidak ditemukan")
+                    return self.fail(404, T("file_missing"))
                 return self.send_json({"ok": True})
             if path == "/api/clear":
                 pid = self.read_json().get("peer")
@@ -659,6 +719,8 @@ class Handler(BaseHTTPRequestHandler):
                 S.cfg["save_dir"] = b["save_dir"].strip()
             if "open_on_receive" in b:
                 S.cfg["open_on_receive"] = bool(b["open_on_receive"])
+            if b.get("lang") in LANGS:
+                S.cfg["lang"] = b["lang"]
             if "add_manual" in b:
                 a = b["add_manual"].strip()
                 if a and a not in S.cfg["manual"]:
@@ -675,7 +737,7 @@ class Handler(BaseHTTPRequestHandler):
     def get_peer(self, pid):
         p = S.peers.get(pid)
         if not p:
-            raise IOError("Perangkat sedang offline")
+            raise IOError(T("offline"))
         return p
 
     def api_send_text(self):
@@ -727,7 +789,7 @@ class Handler(BaseHTTPRequestHandler):
             while done < length:
                 chunk = self.rfile.read(min(CHUNK, length - done))
                 if not chunk:
-                    raise IOError("upload terputus")
+                    raise IOError(T("upload_cut"))
                 conn.send(chunk)
                 if tee:
                     tee.write(chunk)
@@ -739,7 +801,7 @@ class Handler(BaseHTTPRequestHandler):
             r = conn.getresponse()
             body = r.read()
             if r.status != 200:
-                raise IOError(f"ditolak penerima: {body[:200].decode(errors='ignore')}")
+                raise IOError(T("rejected", msg=body[:200].decode(errors="ignore")))
             if tee:
                 tee.close()
                 tee = None
@@ -758,7 +820,7 @@ class Handler(BaseHTTPRequestHandler):
     def api_broadcast_text(self, text):
         targets = S.public_peers()
         if not targets:
-            return self.fail(409, "Tidak ada perangkat online")
+            return self.fail(409, T("no_online"))
         m = S.add_msg({"id": uuid.uuid4().hex, "peer": ALL, "dir": "out", "type": "text",
                        "text": text, "ts": now_ms(), "status": "sending",
                        "targets": [p["name"] for p in targets]})
@@ -780,7 +842,7 @@ class Handler(BaseHTTPRequestHandler):
     def api_broadcast_file(self, name, mime, length):
         targets = S.public_peers()
         if not targets:
-            return self.fail(409, "Tidak ada perangkat online")
+            return self.fail(409, T("no_online"))
         mid = uuid.uuid4().hex
         sent_dir = os.path.join(DATA_DIR, "sent")
         os.makedirs(sent_dir, exist_ok=True)
@@ -795,7 +857,7 @@ class Handler(BaseHTTPRequestHandler):
                 while done < length:
                     chunk = self.rfile.read(min(CHUNK, length - done))
                     if not chunk:
-                        raise IOError("upload terputus")
+                        raise IOError(T("upload_cut"))
                     f.write(chunk)
                     done += len(chunk)
         except Exception as e:
@@ -876,7 +938,7 @@ class Handler(BaseHTTPRequestHandler):
                 while done < length:
                     chunk = self.rfile.read(min(CHUNK, length - done))
                     if not chunk:
-                        raise IOError("koneksi terputus")
+                        raise IOError(T("conn_cut"))
                     f.write(chunk)
                     done += len(chunk)
                     if time.time() - last > 0.25:
@@ -885,7 +947,7 @@ class Handler(BaseHTTPRequestHandler):
                                             "speed": done / max(time.time() - t0, 0.001)})
             os.replace(part, path)
             S.update_msg(m, status="received")
-            notify_incoming(pid, f"📎 {m['name']} ({length / 1048576:.1f} MB) diterima")
+            notify_incoming(pid, T("file_received", name=m["name"], mb=length / 1048576))
             self.send_json({"ok": True})
         except Exception as e:
             try:
@@ -941,7 +1003,7 @@ def install():
         except PermissionError:
             time.sleep(0.5)
     else:
-        msgbox("Gagal menyalin LanDrop. Tutup LanDrop yang sedang berjalan lalu coba lagi.", flags=0x10)
+        msgbox(T("install_fail"), flags=0x10)
         return False
     exe = ps_quote(INSTALLED_EXE)
     wd = ps_quote(INSTALL_DIR)
@@ -949,7 +1011,7 @@ def install():
         "$w=New-Object -ComObject WScript.Shell;"
         "foreach($d in @([Environment]::GetFolderPath('Programs'),[Environment]::GetFolderPath('Desktop'))){"
         f"$s=$w.CreateShortcut((Join-Path $d 'LanDrop.lnk'));$s.TargetPath={exe};"
-        f"$s.WorkingDirectory={wd};$s.IconLocation={exe}+',0';$s.Description='Chat dan kirim file antar laptop';$s.Save()}}"
+        f"$s.WorkingDirectory={wd};$s.IconLocation={exe}+',0';$s.Description='{T("shortcut_desc")}';$s.Save()}}"
     )
     import winreg
     with winreg.CreateKey(winreg.HKEY_CURRENT_USER, UNINSTALL_KEY) as k:
@@ -969,8 +1031,7 @@ def install():
 
 
 def uninstall():
-    if msgbox("Hapus LanDrop dari komputer ini?\n\nFile yang sudah diterima tidak akan dihapus.",
-              flags=0x04 | 0x20) != 6:
+    if msgbox(T("uninstall_q"), flags=0x04 | 0x20) != 6:
         return
     quit_running_instance()
     import winreg
@@ -987,7 +1048,7 @@ def uninstall():
            "Remove-Item -LiteralPath (Join-Path $d 'LanDrop.lnk') -ErrorAction SilentlyContinue}")
     subprocess.Popen(f'cmd /c ping -n 3 127.0.0.1 >nul & rmdir /s /q "{INSTALL_DIR}"',
                      creationflags=NO_WINDOW, cwd=os.environ.get("TEMP", "C:\\"))
-    msgbox("LanDrop sudah dihapus.")
+    msgbox(T("uninstalled"))
 
 
 # ---------------------------------------------------------------- main
@@ -1000,10 +1061,7 @@ def main():
         install()
         return
     if FROZEN and not is_installed_copy() and "--portable" not in args:
-        r = msgbox(f"Install LanDrop {VERSION} di komputer ini?\n\n"
-                   "• Shortcut di Desktop & Start Menu\n"
-                   "• Otomatis jalan saat Windows menyala (bisa dimatikan)\n\n"
-                   "Pilih 'No' untuk menjalankan tanpa install.", flags=0x03 | 0x20)
+        r = msgbox(T("install_q", v=VERSION), flags=0x03 | 0x20)
         if r == 6:
             if install():
                 return
@@ -1018,7 +1076,7 @@ def main():
     try:
         server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), Handler)
     except OSError as e:
-        msgbox(f"Port {HTTP_PORT} sedang dipakai aplikasi lain.\n\n{e}", flags=0x10)
+        msgbox(T("port_busy", port=HTTP_PORT, err=e), flags=0x10)
         return
     server.daemon_threads = True
     threading.Thread(target=discovery_loop, daemon=True).start()

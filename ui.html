@@ -1,7 +1,8 @@
 <!doctype html>
-<html lang="id">
+<html lang="en" translate="no" class="notranslate">
 <head>
 <meta charset="utf-8">
+<meta name="google" content="notranslate">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LanDrop</title>
 <link rel="icon" href="/icon.ico">
@@ -121,6 +122,8 @@ input,textarea{font:inherit;color:inherit}
 .about .links .donate:hover{background:#ffbd4a;border-color:#ffbd4a;color:#1d2330}
 .about small{color:var(--muted);font-size:12px}
 .offline-note{font-size:12px;color:var(--muted);text-align:center;padding:4px 0 0}
+.field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text);font:inherit;outline:none}
+.field select:focus{border-color:var(--accent)}
 </style>
 </head>
 <body>
@@ -128,14 +131,14 @@ input,textarea{font:inherit;color:inherit}
   <div class="me">
     <div class="logo">⇄</div>
     <div class="who"><b id="myName">LanDrop</b><small id="myIp"></small></div>
-    <button class="iconbtn" id="aboutBtn" title="Tentang LanDrop">
+    <button class="iconbtn" id="aboutBtn" data-i18n-title="about">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
     </button>
-    <button class="iconbtn" id="settingsBtn" title="Pengaturan">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    <button class="iconbtn" id="settingsBtn" data-i18n-title="settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.650 1.650 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.830l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
   </div>
-  <div class="label">Perangkat</div>
+  <div class="label" data-i18n="devices"></div>
   <div class="peers" id="peers"></div>
 </aside>
 
@@ -143,51 +146,53 @@ input,textarea{font:inherit;color:inherit}
   <div class="placeholder" id="placeholder">
     <div>
       <div style="font-size:46px">⇄</div>
-      <h2>Pilih perangkat di kiri</h2>
-      <div>Buka LanDrop di laptop lain yang terhubung ke Wi-Fi/LAN yang sama.<br>Perangkat akan muncul otomatis dalam beberapa detik.</div>
+      <h2 data-i18n="pickDevice"></h2>
+      <div data-i18n-html="pickDeviceHint"></div>
     </div>
   </div>
   <div class="head" id="head" hidden>
     <div class="avatar" id="headAvatar"></div>
     <div class="t"><b id="headName"></b><small id="headSub"></small></div>
-    <button class="iconbtn" id="attachTop" title="Kirim file">
+    <button class="iconbtn" id="attachTop" data-i18n-title="sendFile">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
     </button>
-    <button class="iconbtn" id="clearBtn" title="Hapus riwayat chat">
+    <button class="iconbtn" id="clearBtn" data-i18n-title="clearChat">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6"/></svg>
     </button>
   </div>
   <div class="msgs" id="msgs" hidden></div>
   <div class="composer" id="composer" hidden>
-    <button class="iconbtn" id="attach" title="Kirim file (atau drag & drop / Ctrl+V)">
+    <button class="iconbtn" id="attach" data-i18n-title="attachTitle">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
     </button>
-    <textarea id="input" rows="1" placeholder="Ketik pesan, atau Ctrl+V gambar/file…  (Enter kirim, Shift+Enter baris baru)"></textarea>
-    <button class="send" id="sendBtn">Kirim</button>
+    <textarea id="input" rows="1" data-i18n-ph="inputPh"></textarea>
+    <button class="send" id="sendBtn" data-i18n="send"></button>
   </div>
-  <div class="drop" id="drop">Lepaskan untuk mengirim</div>
+  <div class="drop" id="drop" data-i18n="dropHere"></div>
   <input type="file" id="fileInput" multiple hidden>
 </main>
 
 <div class="modal-bg" id="settings">
   <div class="modal">
-    <h3>Pengaturan</h3>
-    <div class="field"><label>Nama perangkat ini</label><input type="text" id="sName"></div>
-    <div class="field"><label>Kunci pasangan</label><input type="password" id="sKey" placeholder="(kosong)">
-      <small>Isi kunci yang <b>sama</b> di semua laptop Anda. Hanya perangkat dengan kunci yang sama yang bisa saling melihat dan mengirim.</small></div>
-    <div class="field"><label>Folder file yang diterima</label><input type="text" id="sDir"></div>
-    <label class="check"><input type="checkbox" id="sAuto"> Jalankan otomatis saat Windows menyala</label>
-    <label class="check"><input type="checkbox" id="sOpen"> Buka jendela LanDrop saat ada pesan/file masuk</label>
-    <div class="field"><label>Tambah perangkat manual (jika tidak muncul otomatis)</label>
-      <div style="display:flex;gap:6px"><input type="text" id="sManual" placeholder="contoh: 192.168.1.23"><button class="btn" id="addManual">Tambah</button></div>
+    <h3 data-i18n="settings"></h3>
+    <div class="field"><label data-i18n="language"></label>
+      <select id="sLang"><option value="en">English</option><option value="id">Bahasa Indonesia</option></select></div>
+    <div class="field"><label data-i18n="devName"></label><input type="text" id="sName"></div>
+    <div class="field"><label data-i18n="pairKey"></label><input type="password" id="sKey" data-i18n-ph="pairKeyPh">
+      <small data-i18n-html="pairKeyHint"></small></div>
+    <div class="field"><label data-i18n="saveDir"></label><input type="text" id="sDir"></div>
+    <label class="check"><input type="checkbox" id="sAuto"> <span data-i18n="autostart"></span></label>
+    <label class="check"><input type="checkbox" id="sOpen"> <span data-i18n="openOnReceive"></span></label>
+    <div class="field"><label data-i18n="manualAdd"></label>
+      <div style="display:flex;gap:6px"><input type="text" id="sManual" data-i18n-ph="manualPh"><button class="btn" id="addManual" data-i18n="add"></button></div>
       <div class="chips" id="manualList"></div>
       <small id="myIps"></small></div>
     <div class="btns">
-      <button class="btn primary" id="saveSettings">Simpan</button>
-      <button class="btn" id="openSaveDir">Buka folder terima</button>
-      <button class="btn" id="closeSettings">Tutup</button>
+      <button class="btn primary" id="saveSettings" data-i18n="save"></button>
+      <button class="btn" id="openSaveDir" data-i18n="openSaveDir"></button>
+      <button class="btn" id="closeSettings" data-i18n="close"></button>
       <span style="flex:1"></span>
-      <button class="btn danger" id="quitBtn">Keluar LanDrop</button>
+      <button class="btn danger" id="quitBtn" data-i18n="quit"></button>
     </div>
     <small style="color:var(--muted);display:block;margin-top:12px" id="ver"></small>
   </div>
@@ -196,30 +201,118 @@ input,textarea{font:inherit;color:inherit}
   <div class="modal about">
     <img class="sm-logo" src="/sandymind-logo.png" alt="Sandy Mind">
     <div class="app"><img src="/icon.ico" alt=""><b>LanDrop</b></div>
-    <div class="ver" id="aboutVer">Versi</div>
-    <p>Chat dan kirim file antar laptop Windows di jaringan yang sama, semudah AirDrop. Tanpa flashdisk, tanpa setting share folder, tanpa internet. Kirim teks, gambar, dan file ke satu atau semua perangkat sekaligus.</p>
+    <div class="ver" id="aboutVer"></div>
+    <p data-i18n="aboutDesc"></p>
     <div class="links">
-      <button data-link="website">🌐 Website Sandy Mind<span style="font-weight:400;color:var(--muted)">sandymind.my.id</span></button>
-      <button data-link="donate" class="donate">☕ Dukung via Saweria</button>
+      <button data-link="website">🌐 <span data-i18n="website"></span><span style="font-weight:400;color:var(--muted)">sandymind.my.id</span></button>
+      <button data-link="donate" class="donate">☕ <span data-i18n="donate"></span></button>
     </div>
-    <small>© 2026 Sandy Mind · Dibuat di Palu</small><br>
-    <button class="btn" id="closeAbout" style="margin-top:14px">Tutup</button>
+    <small>© 2026 Sandy Mind · <span data-i18n="madeIn"></span></small><br>
+    <button class="btn" id="closeAbout" style="margin-top:14px" data-i18n="close"></button>
   </div>
 </div>
 <div class="lightbox" id="lightbox"><img id="lightImg" alt=""></div>
 <div class="toast" id="toast"></div>
 
 <script>
+// ---------- bahasa / language
+const STR = {
+  en: {
+    devices:'Devices', about:'About LanDrop', settings:'Settings', language:'Language',
+    pickDevice:'Pick a device on the left',
+    pickDeviceHint:'Open LanDrop on another laptop connected to the same Wi-Fi/LAN.<br>Devices show up automatically within a few seconds.',
+    searching:'Looking for devices on the network…<br><br>Make sure LanDrop is open on the other laptop, on the same network, and using the same pairing key.',
+    sendFile:'Send file', clearChat:'Clear chat history', attachTitle:'Send file (or drag & drop / Ctrl+V)',
+    inputPh:'Type a message, or Ctrl+V an image/file…  (Enter to send, Shift+Enter for new line)',
+    send:'Send', dropHere:'Drop to send',
+    devName:'This device name', pairKey:'Pairing key', pairKeyPh:'(empty)',
+    pairKeyHint:'Use the <b>same</b> key on all your laptops. Only devices with the same key can see and send to each other.',
+    saveDir:'Folder for received files', autostart:'Start automatically with Windows',
+    openOnReceive:'Open the LanDrop window when a message/file arrives',
+    manualAdd:'Add a device manually (if it doesn\'t show up automatically)', manualPh:'e.g. 192.168.1.23', add:'Add',
+    save:'Save', openSaveDir:'Open received folder', close:'Close', quit:'Quit LanDrop',
+    aboutDesc:'Chat and send files between Windows laptops on the same network, as easy as AirDrop. No flash drive, no shared-folder setup, no internet. Send text, images, and files to one or all devices at once.',
+    website:'Sandy Mind Website', donate:'Support via Saweria', madeIn:'Made in Palu',
+    version:v=>`Version ${v}`,
+    allDevices:'All devices', device:'Device',
+    sendToN:n=>`Send to ${n} online device${n>1?'s':''}`, noOnline:'No devices online',
+    sentToNames:(n,names)=>`Messages & files go to ${n} device${n>1?'s':''}: ${names}`,
+    offlineHint:'Offline — messages can\'t be sent until the device is online',
+    copy:'Copy', copyImg:'Copy image', open:'Open', showInFolder:'Show in folder',
+    failed:'Failed', partial:(d,t)=>`⚠ Sent to ${d}/${t} devices`,
+    sendingToN:n=>`Sending to ${n} devices…`, sending:'Sending…', receiving:'Receiving…',
+    sentToCount:n=>`✓ Sent to ${n} device${n>1?'s':''}`, sent:'✓ Sent',
+    noMsgs:'No messages yet.<br>Type text, paste (Ctrl+V) an image, or drag a file here.',
+    textCopied:'Text copied', imgCopied:'Image copied', fail:e=>`Failed: ${e}`,
+    offline:'Device is offline', pickFirst:'Pick a device first', failSend:(n,e)=>`Failed to send ${n}${e?': '+e:''}`,
+    clearConfirm:n=>`Clear chat history with ${n}? (Received files are not deleted)`,
+    myIps:ips=>`This laptop's IP address: ${ips}`, installed:'installed', portable:'portable mode',
+    saved:'Saved', added:'Added, connecting…',
+    quitConfirm:'Quit LanDrop? This laptop won\'t receive files until LanDrop is opened again.',
+    closedMsg:'LanDrop has been closed. You can close this window.',
+    noNetwork:'no network', pasted:'pasted',
+  },
+  id: {
+    devices:'Perangkat', about:'Tentang LanDrop', settings:'Pengaturan', language:'Bahasa',
+    pickDevice:'Pilih perangkat di kiri',
+    pickDeviceHint:'Buka LanDrop di laptop lain yang terhubung ke Wi-Fi/LAN yang sama.<br>Perangkat akan muncul otomatis dalam beberapa detik.',
+    searching:'Mencari perangkat di jaringan…<br><br>Pastikan LanDrop terbuka di laptop lain, terhubung ke jaringan yang sama, dan memakai kunci pasangan yang sama.',
+    sendFile:'Kirim file', clearChat:'Hapus riwayat chat', attachTitle:'Kirim file (atau drag & drop / Ctrl+V)',
+    inputPh:'Ketik pesan, atau Ctrl+V gambar/file…  (Enter kirim, Shift+Enter baris baru)',
+    send:'Kirim', dropHere:'Lepaskan untuk mengirim',
+    devName:'Nama perangkat ini', pairKey:'Kunci pasangan', pairKeyPh:'(kosong)',
+    pairKeyHint:'Isi kunci yang <b>sama</b> di semua laptop Anda. Hanya perangkat dengan kunci yang sama yang bisa saling melihat dan mengirim.',
+    saveDir:'Folder file yang diterima', autostart:'Jalankan otomatis saat Windows menyala',
+    openOnReceive:'Buka jendela LanDrop saat ada pesan/file masuk',
+    manualAdd:'Tambah perangkat manual (jika tidak muncul otomatis)', manualPh:'contoh: 192.168.1.23', add:'Tambah',
+    save:'Simpan', openSaveDir:'Buka folder terima', close:'Tutup', quit:'Keluar LanDrop',
+    aboutDesc:'Chat dan kirim file antar laptop Windows di jaringan yang sama, semudah AirDrop. Tanpa flashdisk, tanpa setting share folder, tanpa internet. Kirim teks, gambar, dan file ke satu atau semua perangkat sekaligus.',
+    website:'Website Sandy Mind', donate:'Dukung via Saweria', madeIn:'Dibuat di Palu',
+    version:v=>`Versi ${v}`,
+    allDevices:'Semua perangkat', device:'Perangkat',
+    sendToN:n=>`Kirim ke ${n} perangkat online`, noOnline:'Tidak ada perangkat online',
+    sentToNames:(n,names)=>`Pesan & file dikirim ke ${n} perangkat: ${names}`,
+    offlineHint:'Offline — pesan tidak bisa dikirim sampai perangkat online',
+    copy:'Salin', copyImg:'Salin gambar', open:'Buka', showInFolder:'Tampilkan di folder',
+    failed:'Gagal', partial:(d,t)=>`⚠ Terkirim ke ${d}/${t} perangkat`,
+    sendingToN:n=>`Mengirim ke ${n} perangkat…`, sending:'Mengirim…', receiving:'Menerima…',
+    sentToCount:n=>`✓ Terkirim ke ${n} perangkat`, sent:'✓ Terkirim',
+    noMsgs:'Belum ada pesan.<br>Ketik teks, tempel (Ctrl+V) gambar, atau seret file ke sini.',
+    textCopied:'Teks disalin', imgCopied:'Gambar disalin', fail:e=>`Gagal: ${e}`,
+    offline:'Perangkat sedang offline', pickFirst:'Pilih perangkat dulu', failSend:(n,e)=>`Gagal kirim ${n}${e?': '+e:''}`,
+    clearConfirm:n=>`Hapus riwayat chat dengan ${n}? (File yang sudah diterima tidak dihapus)`,
+    myIps:ips=>`Alamat IP laptop ini: ${ips}`, installed:'terinstall', portable:'mode portable',
+    saved:'Tersimpan', added:'Ditambahkan, menghubungkan…',
+    quitConfirm:'Keluar dari LanDrop? Laptop ini tidak akan bisa menerima file sampai LanDrop dibuka lagi.',
+    closedMsg:'LanDrop sudah ditutup. Jendela ini boleh ditutup.',
+    noNetwork:'tidak ada jaringan', pasted:'tempel',
+  },
+};
+let LANG = 'en';
+function t(key, ...a){ const v = (STR[LANG]||STR.en)[key] ?? STR.en[key] ?? key; return typeof v==='function' ? v(...a) : v; }
+const locale = ()=> LANG==='id' ? 'id-ID' : 'en-GB';
+function applyLang(lang){
+  if(lang && STR[lang]) LANG = lang;
+  document.documentElement.lang = LANG;
+  document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll('[data-i18n-html]').forEach(el=>el.innerHTML = t(el.dataset.i18nHtml));
+  document.querySelectorAll('[data-i18n-ph]').forEach(el=>el.placeholder = t(el.dataset.i18nPh));
+  document.querySelectorAll('[data-i18n-title]').forEach(el=>el.title = t(el.dataset.i18nTitle));
+  $('aboutVer').textContent = t('version', st.me?.version || '');
+  if(st.me) $('myIp').textContent = (st.me.ips||[])[0] || t('noNetwork');
+  renderPeers(); renderHead(); if(st.current) renderMsgs(false);
+}
+
 const $ = id => document.getElementById(id);
 const st = { me:null, peers:{}, known:{}, history:[], current:null, progress:{}, unread:{}, settings:{} };
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const initials = n => (n||'?').split(/[\s\-_]+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') || '?';
 const fmtSize = b => b < 1024 ? b+' B' : b < 1048576 ? (b/1024).toFixed(1)+' KB' : b < 1073741824 ? (b/1048576).toFixed(1)+' MB' : (b/1073741824).toFixed(2)+' GB';
-const fmtTime = ts => new Date(ts).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-const fmtDay = ts => new Date(ts).toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+const fmtTime = ts => new Date(ts).toLocaleTimeString(locale(),{hour:'2-digit',minute:'2-digit'});
+const fmtDay = ts => new Date(ts).toLocaleDateString(locale(),{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener">$1</a>');
 
-function toast(t){ const el=$('toast'); el.textContent=t; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),1800); }
+function toast(msg){ const el=$('toast'); el.textContent=msg; el.classList.add('show'); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove('show'),1800); }
 async function api(path, body){
   const r = await fetch(path,{method: body===undefined?'GET':'POST', headers:{'Content-Type':'application/json'}, body: body===undefined?undefined:JSON.stringify(body)});
   const j = await r.json().catch(()=>({}));
@@ -232,7 +325,7 @@ const ALL = 'all';
 const ALL_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 const onlineCount = ()=>Object.keys(st.peers).length;
 const isOnline = id => id===ALL ? onlineCount()>0 : !!st.peers[id];
-function peerName(id){ return id===ALL ? 'Semua perangkat' : (st.peers[id]?.name || st.known[id] || 'Perangkat'); }
+function peerName(id){ return id===ALL ? t('allDevices') : (st.peers[id]?.name || st.known[id] || t('device')); }
 function avatarHtml(id){
   return id===ALL ? `<div class="avatar all">${ALL_ICON}</div>`
     : `<div class="avatar">${esc(initials(peerName(id)))}<span class="dot ${st.peers[id]?'on':''}"></span></div>`;
@@ -248,10 +341,10 @@ function renderPeers(){
   const lastTs = {};
   for(const m of st.history) lastTs[m.peer] = Math.max(lastTs[m.peer]||0, m.ts);
   const list = [...ids].filter(Boolean).sort((a,b)=> (!!st.peers[b]-!!st.peers[a]) || ((lastTs[b]||0)-(lastTs[a]||0)));
-  if(!list.length){ $('peers').innerHTML = '<div class="empty-peers">Mencari perangkat di jaringan…<br><br>Pastikan LanDrop terbuka di laptop lain, terhubung ke jaringan yang sama, dan memakai kunci pasangan yang sama.</div>'; return; }
+  if(!list.length){ $('peers').innerHTML = `<div class="empty-peers">${t('searching')}</div>`; return; }
   const n = onlineCount();
   const allRow = (n || st.history.some(m=>m.peer===ALL))
-    ? peerRow(ALL, n ? `Kirim ke ${n} perangkat online` : 'Tidak ada perangkat online') + '<div class="peer-sep"></div>' : '';
+    ? peerRow(ALL, n ? t('sendToN', n) : t('noOnline')) + '<div class="peer-sep"></div>' : '';
   $('peers').innerHTML = allRow + list.map(id=>{
     const p = st.peers[id], last = [...st.history].reverse().find(m=>m.peer===id);
     const sub = last ? (last.type==='text' ? last.text : '📎 '+last.name) : (p ? p.ip : '');
@@ -271,20 +364,21 @@ function renderHead(){
   $('headAvatar').outerHTML = avatarHtml(id).replace('<div class="avatar', '<div id="headAvatar" class="avatar');
   if(id===ALL){
     const names = Object.values(st.peers).map(p=>p.name);
-    $('headSub').textContent = names.length ? `Pesan & file dikirim ke ${names.length} perangkat: ${names.join(', ')}` : 'Tidak ada perangkat online';
+    $('headSub').textContent = names.length ? t('sentToNames', names.length, names.join(', ')) : t('noOnline');
   } else {
-    $('headSub').textContent = p ? `Online · ${p.ip}` : 'Offline — pesan tidak bisa dikirim sampai perangkat online';
+    $('headSub').textContent = p ? `Online · ${p.ip}` : t('offlineHint');
   }
   $('sendBtn').disabled = !isOnline(id);
 }
 
 // ---------- messages
+const DONE = ['received','sent','partial'];
 function msgHtml(m){
   const prog = st.progress[m.id];
   let body;
   if(m.type==='text'){
     body = `<div class="bubble">${linkify(m.text)}</div>`;
-  } else if((m.mime||'').startsWith('image/') && m.path && ['received','sent','partial'].includes(m.status)){
+  } else if((m.mime||'').startsWith('image/') && m.path && DONE.includes(m.status)){
     body = `<div class="bubble img"><img src="/api/file/${m.id}" data-id="${m.id}" alt="${esc(m.name)}" loading="lazy"></div>`;
   } else {
     const ext = (m.name.split('.').pop()||'').slice(0,4).toUpperCase();
@@ -296,17 +390,17 @@ function msgHtml(m){
       ${busy?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</div></div></div>`;
   }
   const acts = [];
-  if(m.type==='text') acts.push(`<button data-act="copy" data-id="${m.id}">Salin</button>`);
-  if(m.type==='file' && m.path && ['received','sent','partial'].includes(m.status)){
-    if((m.mime||'').startsWith('image/')) acts.push(`<button data-act="copyimg" data-id="${m.id}">Salin gambar</button>`);
-    acts.push(`<button data-act="open" data-id="${m.id}">Buka</button>`);
-    acts.push(`<button data-act="folder" data-id="${m.id}">Tampilkan di folder</button>`);
+  if(m.type==='text') acts.push(`<button data-act="copy" data-id="${m.id}">${t('copy')}</button>`);
+  if(m.type==='file' && m.path && DONE.includes(m.status)){
+    if((m.mime||'').startsWith('image/')) acts.push(`<button data-act="copyimg" data-id="${m.id}">${t('copyImg')}</button>`);
+    acts.push(`<button data-act="open" data-id="${m.id}">${t('open')}</button>`);
+    acts.push(`<button data-act="folder" data-id="${m.id}">${t('showInFolder')}</button>`);
   }
-  const status = m.status==='failed' ? `<span class="bad" title="${esc(m.error||'')}">Gagal${m.error?': '+esc(m.error).slice(0,80):''}</span>`
-    : m.status==='partial' ? `<span class="warn" title="${esc(m.error||'')}">⚠ Terkirim ke ${m.delivered}/${m.total} perangkat</span>`
-    : m.status==='sending' ? (m.targets ? `Mengirim ke ${m.targets.length} perangkat…` : 'Mengirim…')
-    : m.status==='receiving' ? 'Menerima…'
-    : m.dir==='out' ? (m.peer===ALL ? `<span title="${esc((m.targets||[]).join(', '))}">✓ Terkirim ke ${m.delivered ?? (m.targets||[]).length} perangkat</span>` : '✓ Terkirim') : '';
+  const status = m.status==='failed' ? `<span class="bad" title="${esc(m.error||'')}">${t('failed')}${m.error?': '+esc(m.error).slice(0,80):''}</span>`
+    : m.status==='partial' ? `<span class="warn" title="${esc(m.error||'')}">${t('partial', m.delivered, m.total)}</span>`
+    : m.status==='sending' ? (m.targets ? t('sendingToN', m.targets.length) : t('sending'))
+    : m.status==='receiving' ? t('receiving')
+    : m.dir==='out' ? (m.peer===ALL ? `<span title="${esc((m.targets||[]).join(', '))}">${t('sentToCount', m.delivered ?? (m.targets||[]).length)}</span>` : t('sent')) : '';
   return `<div class="row ${m.dir}" id="m-${m.id}">${body}<div class="meta"><span>${fmtTime(m.ts)}</span>${status?`<span>${status}</span>`:''}${acts.join('')}</div></div>`;
 }
 function renderMsgs(scroll){
@@ -314,7 +408,7 @@ function renderMsgs(scroll){
   const ms = st.history.filter(m=>m.peer===st.current);
   let html = '', lastDay = '';
   for(const m of ms){ const d = fmtDay(m.ts); if(d!==lastDay){ html += `<div class="day">${d}</div>`; lastDay=d; } html += msgHtml(m); }
-  if(!ms.length) html = `<div class="placeholder"><div>Belum ada pesan.<br>Ketik teks, tempel (Ctrl+V) gambar, atau seret file ke sini.</div></div>`;
+  if(!ms.length) html = `<div class="placeholder"><div>${t('noMsgs')}</div></div>`;
   box.innerHTML = html;
   if(scroll || near){ box.scrollTop = box.scrollHeight; box.querySelectorAll('img').forEach(i=>i.onload=()=>{ box.scrollTop = box.scrollHeight; }); }
 }
@@ -330,10 +424,10 @@ $('msgs').addEventListener('click', async e=>{
   const b = e.target.closest('button[data-act]'); if(!b) return;
   const m = st.history.find(x=>x.id===b.dataset.id); if(!m) return;
   try{
-    if(b.dataset.act==='copy'){ await navigator.clipboard.writeText(m.text); toast('Teks disalin'); }
-    else if(b.dataset.act==='copyimg'){ await copyImage(m); toast('Gambar disalin'); }
+    if(b.dataset.act==='copy'){ await navigator.clipboard.writeText(m.text); toast(t('textCopied')); }
+    else if(b.dataset.act==='copyimg'){ await copyImage(m); toast(t('imgCopied')); }
     else await api('/api/open',{id:m.id, what:b.dataset.act==='folder'?'folder':'file'});
-  }catch(err){ toast('Gagal: '+err.message); }
+  }catch(err){ toast(t('fail', err.message)); }
 });
 $('lightbox').onclick = ()=>$('lightbox').classList.remove('show');
 
@@ -348,16 +442,17 @@ async function copyImage(m){
 }
 
 // ---------- sending
+const offlineMsg = ()=> st.current===ALL ? t('noOnline') : t('offline');
 async function sendText(){
-  const t = $('input').value; if(!t.trim() || !st.current) return;
-  if(!isOnline(st.current)){ toast(st.current===ALL ? 'Tidak ada perangkat online' : 'Perangkat sedang offline'); return; }
+  const text = $('input').value; if(!text.trim() || !st.current) return;
+  if(!isOnline(st.current)){ toast(offlineMsg()); return; }
   $('input').value=''; autosize();
-  try{ await api('/api/send-text',{peer:st.current, text:t}); }catch(e){ toast('Gagal: '+e.message); }
+  try{ await api('/api/send-text',{peer:st.current, text}); }catch(e){ toast(t('fail', e.message)); }
 }
 const queueFiles = []; let sending = false;
 function sendFiles(files){
-  if(!st.current){ toast('Pilih perangkat dulu'); return; }
-  if(!isOnline(st.current)){ toast(st.current===ALL ? 'Tidak ada perangkat online' : 'Perangkat sedang offline'); return; }
+  if(!st.current){ toast(t('pickFirst')); return; }
+  if(!isOnline(st.current)){ toast(offlineMsg()); return; }
   for(const f of files) queueFiles.push({f, peer:st.current});
   pump();
 }
@@ -368,11 +463,11 @@ async function pump(){
     let name = f.name || 'file';
     if((!f.name || f.name==='image.png') && (f.type||'').startsWith('image/')){
       const d = new Date(), p = n=>String(n).padStart(2,'0');
-      name = `tempel-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.${(f.type.split('/')[1]||'png').replace('jpeg','jpg')}`;
+      name = `${t('pasted')}-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}.${(f.type.split('/')[1]||'png').replace('jpeg','jpg')}`;
     }
     const url = `/api/send-file?peer=${encodeURIComponent(peer)}&name=${encodeURIComponent(name)}&mime=${encodeURIComponent(f.type||'application/octet-stream')}`;
-    try{ const r = await fetch(url,{method:'POST', headers:{'Content-Type':'application/octet-stream'}, body:f}); if(!r.ok){ const j=await r.json().catch(()=>({})); toast('Gagal kirim '+name+': '+(j.error||r.status)); } }
-    catch(e){ toast('Gagal kirim '+name); }
+    try{ const r = await fetch(url,{method:'POST', headers:{'Content-Type':'application/octet-stream'}, body:f}); if(!r.ok){ const j=await r.json().catch(()=>({})); toast(t('failSend', name, j.error||r.status)); } }
+    catch(e){ toast(t('failSend', name)); }
   }
   sending = false;
 }
@@ -398,49 +493,55 @@ main.addEventListener('drop', e=>{ e.preventDefault(); dragDepth=0; $('drop').cl
 window.addEventListener('dragover', e=>e.preventDefault()); window.addEventListener('drop', e=>e.preventDefault());
 
 $('clearBtn').onclick = async ()=>{
-  if(!st.current || !confirm('Hapus riwayat chat dengan '+peerName(st.current)+'? (File yang sudah diterima tidak dihapus)')) return;
+  if(!st.current || !confirm(t('clearConfirm', peerName(st.current)))) return;
   await api('/api/clear',{peer:st.current});
 };
 
 // ---------- settings
 function fillSettings(){
   const s = st.settings;
+  $('sLang').value = LANG;
   $('sName').value = st.me?.name||''; $('sKey').value = s.key||''; $('sDir').value = s.save_dir||'';
   $('sAuto').checked = !!s.autostart; $('sOpen').checked = !!s.open_on_receive;
   $('manualList').innerHTML = (s.manual||[]).map(a=>`<span class="chip">${esc(a)}<button data-rm="${esc(a)}">✕</button></span>`).join('');
   $('manualList').querySelectorAll('button').forEach(b=>b.onclick=async()=>{ const r=await api('/api/settings',{remove_manual:b.dataset.rm}); st.settings=r.settings; fillSettings(); });
-  $('myIps').textContent = 'Alamat IP laptop ini: ' + ((st.me?.ips||[]).join(', ') || '-');
-  $('ver').textContent = 'LanDrop v' + (st.me?.version||'') + (s.installed?' · terinstall':' · mode portable');
+  $('myIps').textContent = t('myIps', (st.me?.ips||[]).join(', ') || '-');
+  $('ver').textContent = 'LanDrop v' + (st.me?.version||'') + ' · ' + (s.installed ? t('installed') : t('portable'));
 }
 $('settingsBtn').onclick = ()=>{ fillSettings(); $('settings').classList.add('show'); };
 $('closeSettings').onclick = ()=>$('settings').classList.remove('show');
+// bahasa langsung berlaku saat dipilih
+$('sLang').onchange = async ()=>{
+  applyLang($('sLang').value); fillSettings();
+  try{ const r = await api('/api/settings',{lang:LANG}); st.settings = r.settings; }catch(e){ toast(t('fail', e.message)); }
+};
 $('saveSettings').onclick = async ()=>{
   try{
     const r = await api('/api/settings',{name:$('sName').value, key:$('sKey').value, save_dir:$('sDir').value,
-      autostart:$('sAuto').checked, open_on_receive:$('sOpen').checked});
-    st.settings = r.settings; $('settings').classList.remove('show'); toast('Tersimpan');
-  }catch(e){ toast('Gagal: '+e.message); }
+      autostart:$('sAuto').checked, open_on_receive:$('sOpen').checked, lang:LANG});
+    st.settings = r.settings; $('settings').classList.remove('show'); toast(t('saved'));
+  }catch(e){ toast(t('fail', e.message)); }
 };
 $('addManual').onclick = async ()=>{
   const v = $('sManual').value.trim(); if(!v) return;
-  const r = await api('/api/settings',{add_manual:v}); st.settings=r.settings; $('sManual').value=''; fillSettings(); toast('Ditambahkan, menghubungkan…');
+  const r = await api('/api/settings',{add_manual:v}); st.settings=r.settings; $('sManual').value=''; fillSettings(); toast(t('added'));
 };
 $('openSaveDir').onclick = ()=>api('/api/open',{what:'savedir'});
 
 // ---------- about
 function showAbout(){
-  $('aboutVer').textContent = 'Versi ' + (st.me?.version || '');
+  $('aboutVer').textContent = t('version', st.me?.version || '');
   $('about').classList.add('show');
 }
 $('aboutBtn').onclick = showAbout;
 $('closeAbout').onclick = ()=>{ $('about').classList.remove('show'); if(location.hash==='#about') history.replaceState(null,'',location.pathname); };
 $('about').addEventListener('click', e=>{ if(e.target.id==='about') $('closeAbout').onclick(); });
-document.querySelectorAll('#about [data-link]').forEach(b=>b.onclick=()=>api('/api/open-url',{link:b.dataset.link}).catch(err=>toast('Gagal: '+err.message)));
+document.querySelectorAll('#about [data-link]').forEach(b=>b.onclick=()=>api('/api/open-url',{link:b.dataset.link}).catch(err=>toast(t('fail', err.message))));
 window.addEventListener('hashchange', ()=>{ if(location.hash==='#about') showAbout(); });
 document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ $('about').classList.remove('show'); $('settings').classList.remove('show'); $('lightbox').classList.remove('show'); } });
 $('quitBtn').onclick = async ()=>{
-  if(!confirm('Keluar dari LanDrop? Laptop ini tidak akan bisa menerima file sampai LanDrop dibuka lagi.')) return;
-  await api('/api/quit',{}).catch(()=>{}); document.body.innerHTML='<div class="placeholder">LanDrop sudah ditutup. Jendela ini boleh ditutup.</div>';
+  if(!confirm(t('quitConfirm'))) return;
+  await api('/api/quit',{}).catch(()=>{}); document.body.innerHTML=`<div class="placeholder">${t('closedMsg')}</div>`;
 };
 
 // ---------- realtime
@@ -458,15 +559,19 @@ async function boot(){
   const s = await api('/api/state');
   st.me = s.me; st.history = s.history; st.settings = s.settings; st.known = s.known;
   st.peers = Object.fromEntries(s.peers.map(p=>[p.id,p]));
-  $('myName').textContent = s.me.name; $('myIp').textContent = (s.me.ips||[])[0] || 'tidak ada jaringan';
-  renderPeers();
+  $('myName').textContent = s.me.name;
+  applyLang(s.settings.lang);
   if(location.hash==='#about' || s.show_about) showAbout();
   if(st.current) select(st.current); else { const first = Object.keys(st.peers)[0]; if(first) select(first); }
 }
+applyLang('en');
 const es = new EventSource('/api/events');
 es.onopen = ()=>boot();
 es.addEventListener('peers', e=>setPeers(JSON.parse(e.data)));
-es.addEventListener('settings', e=>{ const d=JSON.parse(e.data); st.settings=d.settings; st.me=d.me; $('myName').textContent=d.me.name; });
+es.addEventListener('settings', e=>{
+  const d=JSON.parse(e.data); st.settings=d.settings; st.me=d.me; $('myName').textContent=d.me.name;
+  if(d.settings.lang && d.settings.lang!==LANG) applyLang(d.settings.lang);
+});
 es.addEventListener('cleared', e=>{ const d=JSON.parse(e.data); st.history = st.history.filter(m=>m.peer!==d.peer); renderPeers(); if(st.current===d.peer) renderMsgs(true); });
 es.addEventListener('progress', e=>{
   const d = JSON.parse(e.data); st.progress[d.id]=d;
