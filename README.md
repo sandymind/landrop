@@ -1,52 +1,53 @@
 # LanDrop
 
-Chat dan kirim file antar laptop Windows di jaringan yang sama (Wi-Fi/LAN), mirip AirDrop / Quick Share.
+Chat and send files between Windows laptops on the same network (Wi-Fi/LAN) — like AirDrop or Quick Share, for Windows.
 
-Dibuat oleh **Sandy Mind** · [sandymind.my.id](http://sandymind.my.id/) · Dukung pengembangan lewat [Saweria](https://saweria.co/sandymind) ☕
+Made by **Sandy Mind** · [sandymind.my.id](http://sandymind.my.id/) · Support development on [Saweria](https://saweria.co/sandymind) ☕
 
-## Install di setiap laptop
-1. Salin `dist\LanDrop.exe` ke laptop (sekali saja: lewat flashdisk, email, atau Google Drive).
-2. Klik dua kali `LanDrop.exe` → pilih **Yes** untuk install.
-   - Jika muncul **"Windows protected your PC"** (SmartScreen): klik **More info → Run anyway** (EXE ini belum ditandatangani digital).
-   - Jika muncul **Windows Firewall**: centang **Private networks** lalu **Allow access**. Tanpa ini laptop lain tidak bisa mengirim ke laptop ini.
-3. Selesai. Shortcut ada di Desktop & Start Menu, dan LanDrop otomatis jalan di belakang saat Windows menyala.
+## Install on each laptop
+1. Download `LanDrop.exe` from the [latest release](https://github.com/sandymind/landrop/releases/latest) (or build it yourself, see below).
+2. Double-click `LanDrop.exe` → choose **Yes** to install.
+   - If **"Windows protected your PC"** (SmartScreen) appears: click **More info → Run anyway** (the EXE is not digitally signed yet).
+   - If **Windows Firewall** asks: tick **Private networks**, then **Allow access**. Without this, other laptops can't send to this one.
+3. Done. Shortcuts are added to the Desktop and Start Menu, and LanDrop runs in the background when Windows starts.
 
-Setelah laptop baru ter-install, selanjutnya cukup kirim `LanDrop.exe` versi baru lewat LanDrop sendiri.
+Once a laptop has LanDrop, you can send newer versions of `LanDrop.exe` to it through LanDrop itself. Installing over an older version keeps chat history and settings.
 
-## Pemakaian
-- Laptop lain yang membuka LanDrop muncul otomatis di kiri (titik hijau = online).
-- **Teks**: ketik lalu Enter. Klik **Salin** pada pesan untuk menyalin ke clipboard.
-- **Gambar/screenshot**: tekan **Ctrl+V** di jendela chat (misalnya setelah Win+Shift+S).
-- **File**: drag & drop ke jendela chat, atau tombol **+**. Ukuran tidak dibatasi.
-- **Kirim ke semua perangkat**: pilih **Semua perangkat** di paling atas daftar. Teks, gambar, dan file dikirim ke semua laptop yang online sekaligus. Jika ada yang gagal, pesan ditandai ⚠ "Terkirim ke 1/2 perangkat" (arahkan kursor untuk melihat penyebabnya).
-- File diterima tersimpan di `Downloads\LanDrop` (bisa diubah di Pengaturan ⚙).
-- **Tentang LanDrop**: tombol ⓘ di samping ⚙, atau klik kanan tray → Tentang LanDrop.
-- Menutup jendela tidak mematikan LanDrop — tetap bisa menerima file, dan icon ⇄ tetap ada di tray taskbar.
+## Usage
+- Other laptops running LanDrop appear automatically on the left (green dot = online).
+- **Text**: type and press Enter. Click **Copy** on a message to copy it to the clipboard.
+- **Images/screenshots**: press **Ctrl+V** in the chat window (e.g. after Win+Shift+S).
+- **Files**: drag & drop into the chat window, or use the **+** button. No size limit.
+- **Send to all devices**: pick **All devices** at the top of the list. Text, images, and files go to every online laptop at once. If some fail, the message shows ⚠ "Sent to 1/2 devices" (hover to see why).
+- Received files are saved to `Downloads\LanDrop` (changeable in ⚙ Settings).
+- **About LanDrop**: the ⓘ button next to ⚙, or right-click the tray icon → About LanDrop.
+- Closing the window doesn't stop LanDrop — it keeps receiving files and the ⇄ icon stays in the taskbar tray.
 
 ## Tray icon
-- **Klik kiri** icon ⇄ di tray: buka jendela LanDrop.
-- **Klik kanan**: buka folder file diterima, lihat jumlah perangkat online, atur autostart, atau **Keluar**.
-- Saat jendela tertutup, pesan/file masuk muncul sebagai notifikasi Windows. Klik notifikasinya untuk membuka chat.
-- Di Windows 10/11 icon baru biasanya tersembunyi di balik tombol **^**. Seret icon ⇄ ke taskbar agar selalu terlihat.
+- **Left-click** the ⇄ tray icon: open the LanDrop window.
+- **Right-click**: open the received files folder, see how many devices are online, toggle start with Windows, or **Quit**.
+- While the window is closed, incoming messages/files show up as Windows notifications. Click one to open the chat.
+- On Windows 10/11 new icons are often hidden behind the **^** button. Drag the ⇄ icon onto the taskbar to keep it visible.
 
-## Bahasa / Language
-Default **English**. Ganti ke **Bahasa Indonesia** di ⚙ Settings → Language; berlaku langsung, termasuk menu tray dan notifikasi. Halaman ditandai *notranslate*, jadi Edge tidak lagi menawarkan terjemahan.
+## Language
+English by default. Switch to **Bahasa Indonesia** in ⚙ Settings → Language; it applies instantly, including the tray menu and notifications. The page is marked *notranslate*, so Edge doesn't offer to translate it.
 
-## Pengaturan penting (⚙)
-- **Kunci pasangan**: isi kata kunci yang sama di semua laptop Anda. Laptop lain di jaringan (misal Wi-Fi kantor) yang tidak tahu kuncinya tidak bisa melihat atau mengirim ke Anda.
-- **Tambah perangkat manual**: jika laptop tidak muncul otomatis (beberapa router/Wi-Fi kantor memblokir broadcast), masukkan IP laptop tujuan — IP-nya tertera di Pengaturan laptop tersebut.
+## Important settings (⚙)
+- **Pairing key**: enter the same key on all your laptops. Other laptops on the network (e.g. office Wi-Fi) that don't know the key can't see you or send to you.
+- **Add a device manually**: if a laptop doesn't show up automatically (some routers/office Wi-Fi block broadcasts), enter its IP address — it's shown in that laptop's Settings.
 
-## Jika perangkat tidak muncul
-- Pastikan keduanya di jaringan yang sama dan network profile Windows = **Private** (Settings → Network → Properties).
-- Pastikan LanDrop diizinkan di firewall (Windows Security → Firewall → Allow an app). Port yang dipakai: TCP 47801 dan UDP 47800.
-- Wi-Fi tamu/publik sering memblokir komunikasi antar perangkat ("client isolation"); gunakan hotspot HP atau jaringan lain.
+## If devices don't show up
+- Make sure both are on the same network and the Windows network profile is **Private** (Settings → Network → Properties).
+- Make sure LanDrop is allowed through the firewall (Windows Security → Firewall → Allow an app). Ports used: TCP 47801 and UDP 47800.
+- Guest/public Wi-Fi often blocks device-to-device traffic ("client isolation"); use your phone's hotspot or another network.
 
 ## Uninstall
-Settings → Apps → **LanDrop** → Uninstall. File yang sudah diterima tidak dihapus.
+Settings → Apps → **LanDrop** → Uninstall. Received files are not deleted.
 
-## Catatan keamanan
-Transfer tidak dienkripsi. Pakai di jaringan yang Anda percaya (rumah, hotspot sendiri). Kunci pasangan mencegah orang lain mengirim ke Anda, tetapi tidak menyembunyikan isi transfer dari orang yang menyadap jaringan.
+## Security note
+Transfers are not encrypted. Use LanDrop on networks you trust (home, your own hotspot). The pairing key stops others from sending to you, but does not hide transfer contents from someone sniffing the network.
 
-## Build ulang dari source
-Butuh Python 3.10+. Jalankan `build.bat` → hasil di `dist\LanDrop.exe`.
-File: `landrop.py` (server, discovery, installer), `tray.py` (tray icon), `ui.html` (tampilan), `make_icon.py` (icon).
+## Build from source
+Requires Python 3.10+. Run `build.bat` → output at `dist\LanDrop.exe`.
+
+Files: `landrop.py` (server, discovery, installer), `tray.py` (tray icon), `ui.html` (interface), `make_icon.py` (app icon), `sandymind-logo.png` (About dialog).
