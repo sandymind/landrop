@@ -122,6 +122,16 @@ input,textarea{font:inherit;color:inherit}
 .about .links .donate:hover{background:#ffbd4a;border-color:#ffbd4a;color:#1d2330}
 .about small{color:var(--muted);font-size:12px}
 .offline-note{font-size:12px;color:var(--muted);text-align:center;padding:4px 0 0}
+.upd{margin:-4px 0 16px;font-size:13px;color:var(--muted);min-height:20px}
+.upd .linkbtn{color:var(--accent);padding:0;font-size:13px;margin-left:6px}
+.upd .linkbtn:hover{text-decoration:underline}
+.upd .ok{color:var(--ok)}
+.upd .new{background:var(--accent-2);border:1px solid var(--accent);border-radius:12px;padding:12px 14px;color:var(--text);text-align:center}
+.upd .new b{display:block;font-size:14px;margin-bottom:2px}
+.upd .new small{display:block;color:var(--muted);margin:2px 0 10px}
+.upd .new .btn{margin:0 3px}
+.iconbtn{position:relative}
+.iconbtn .upd-dot{position:absolute;top:5px;right:5px;width:8px;height:8px;border-radius:50%;background:#e5484d;border:2px solid var(--side)}
 .field select{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--bg);color:var(--text);font:inherit;outline:none}
 .field select:focus{border-color:var(--accent)}
 </style>
@@ -202,6 +212,7 @@ input,textarea{font:inherit;color:inherit}
     <img class="sm-logo" src="/sandymind-logo.png" alt="Sandy Mind">
     <div class="app"><img src="/icon.ico" alt=""><b>LanDrop</b></div>
     <div class="ver" id="aboutVer"></div>
+    <div class="upd" id="upd"></div>
     <p data-i18n="aboutDesc"></p>
     <div class="links">
       <button data-link="website">🌐 <span data-i18n="website"></span><span style="font-weight:400;color:var(--muted)">sandymind.my.id</span></button>
@@ -251,6 +262,10 @@ const STR = {
     quitConfirm:'Quit LanDrop? This laptop won\'t receive files until LanDrop is opened again.',
     closedMsg:'LanDrop has been closed. You can close this window.',
     noNetwork:'no network', pasted:'pasted',
+    checking:'Checking for updates…', upToDate:'✓ You have the latest version', checkAgain:'Check again',
+    newVersion:v=>`New version ${v} is available`, newHint:'Download it, run LanDrop.exe, and choose Yes. Your chats and settings are kept.',
+    download:'Download update', whatsNew:'What\'s new', tryAgain:'Try again', updateAvail:'Update available',
+    opening:'Opening download in your browser…', updFail:'Couldn\'t check for updates. Check your internet connection.',
   },
   id: {
     devices:'Perangkat', about:'Tentang LanDrop', settings:'Pengaturan', language:'Bahasa',
@@ -286,6 +301,10 @@ const STR = {
     quitConfirm:'Keluar dari LanDrop? Laptop ini tidak akan bisa menerima file sampai LanDrop dibuka lagi.',
     closedMsg:'LanDrop sudah ditutup. Jendela ini boleh ditutup.',
     noNetwork:'tidak ada jaringan', pasted:'tempel',
+    checking:'Mengecek update…', upToDate:'✓ Anda memakai versi terbaru', checkAgain:'Cek lagi',
+    newVersion:v=>`Versi baru ${v} tersedia`, newHint:'Unduh, jalankan LanDrop.exe, lalu pilih Yes. Chat dan pengaturan tetap tersimpan.',
+    download:'Unduh update', whatsNew:'Apa yang baru', tryAgain:'Coba lagi', updateAvail:'Update tersedia',
+    opening:'Membuka unduhan di browser…', updFail:'Tidak bisa mengecek update. Periksa koneksi internet.',
   },
 };
 let LANG = 'en';
@@ -301,6 +320,7 @@ function applyLang(lang){
   $('aboutVer').textContent = t('version', st.me?.version || '');
   if(st.me) $('myIp').textContent = (st.me.ips||[])[0] || t('noNetwork');
   renderPeers(); renderHead(); if(st.current) renderMsgs(false);
+  renderUpdate();
 }
 
 const $ = id => document.getElementById(id);
@@ -528,10 +548,40 @@ $('addManual').onclick = async ()=>{
 };
 $('openSaveDir').onclick = ()=>api('/api/open',{what:'savedir'});
 
-// ---------- about
+// ---------- about + cek update
+let upd = null, updBusy = false;
+function renderUpdate(){
+  const box = $('upd');
+  if(updBusy){ box.innerHTML = t('checking'); }
+  else if(!upd){ box.innerHTML = ''; }
+  else if(upd.error){ box.innerHTML = `${t('updFail')}<button class="linkbtn" data-upd="check">${t('tryAgain')}</button>`; }
+  else if(upd.newer){
+    box.innerHTML = `<div class="new"><b>🎉 ${t('newVersion', 'v'+esc(upd.latest))}</b><small>${t('newHint')}</small>
+      <button class="btn primary" data-upd="download">⬇ ${t('download')}</button><button class="btn" data-upd="notes">${t('whatsNew')}</button></div>`;
+  }
+  else { box.innerHTML = `<span class="ok">${t('upToDate')}</span><button class="linkbtn" data-upd="check">${t('checkAgain')}</button>`; }
+  // titik merah di tombol ⓘ jika ada versi baru
+  const btn = $('aboutBtn'); let dot = btn.querySelector('.upd-dot');
+  if(upd?.newer && !dot){ dot = document.createElement('span'); dot.className='upd-dot'; btn.appendChild(dot); }
+  if(!upd?.newer && dot) dot.remove();
+  btn.title = upd?.newer ? `${t('about')} · ${t('updateAvail')}` : t('about');
+}
+async function checkUpdate(force){
+  updBusy = true; renderUpdate();
+  try{ upd = await api('/api/update' + (force ? '?force=1' : '')); }
+  catch(e){ upd = {error: e.message}; }
+  updBusy = false; renderUpdate();
+}
+$('upd').addEventListener('click', e=>{
+  const b = e.target.closest('[data-upd]'); if(!b) return;
+  if(b.dataset.upd==='check') checkUpdate(true);
+  else if(b.dataset.upd==='download'){ api('/api/open-url',{link:'update'}).then(()=>toast(t('opening'))).catch(err=>toast(t('fail', err.message))); }
+  else if(b.dataset.upd==='notes'){ api('/api/open-url',{link:'release'}).catch(err=>toast(t('fail', err.message))); }
+});
 function showAbout(){
   $('aboutVer').textContent = t('version', st.me?.version || '');
   $('about').classList.add('show');
+  if(!upd || upd.error) checkUpdate(false); else renderUpdate();
 }
 $('aboutBtn').onclick = showAbout;
 $('closeAbout').onclick = ()=>{ $('about').classList.remove('show'); if(location.hash==='#about') history.replaceState(null,'',location.pathname); };
@@ -562,6 +612,7 @@ async function boot(){
   $('myName').textContent = s.me.name;
   applyLang(s.settings.lang);
   if(location.hash==='#about' || s.show_about) showAbout();
+  else if(!upd) checkUpdate(false);  // cek diam-diam: titik merah di ⓘ jika ada versi baru
   if(st.current) select(st.current); else { const first = Object.keys(st.peers)[0]; if(first) select(first); }
 }
 applyLang('en');

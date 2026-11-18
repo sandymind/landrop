@@ -21,6 +21,7 @@ Once a laptop has LanDrop, you can send newer versions of `LanDrop.exe` to it th
 - **Send to all devices**: pick **All devices** at the top of the list. Text, images, and files go to every online laptop at once. If some fail, the message shows ⚠ "Sent to 1/2 devices" (hover to see why).
 - Received files are saved to `Downloads\LanDrop` (changeable in ⚙ Settings).
 - **About LanDrop**: the ⓘ button next to ⚙, or right-click the tray icon → About LanDrop.
+- **Updates**: LanDrop checks [GitHub Releases](https://github.com/sandymind/landrop/releases) for a newer version. When one is available, a red dot appears on ⓘ and the About dialog offers **Download update** — run the downloaded `LanDrop.exe` and choose **Yes**.
 - Closing the window doesn't stop LanDrop — it keeps receiving files and the ⇄ icon stays in the taskbar tray.
 
 ## Tray icon

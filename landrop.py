@@ -22,11 +22,44 @@ from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 APP = "LanDrop"
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 ALL = "all"  # id percakapan "Semua perangkat"
 # link yang boleh dibuka dari halaman About (di browser default)
 ABOUT_LINKS = {"website": "http://sandymind.my.id/", "donate": "https://saweria.co/sandymind",
                "github": "https://github.com/sandymind/landrop"}
+# cek versi terbaru lewat GitHub Releases (repo public, tanpa login)
+RELEASES_API = os.environ.get("LANDROP_RELEASES_API",
+                              "https://api.github.com/repos/sandymind/landrop/releases/latest")
+RELEASE_PREFIX = "https://github.com/sandymind/landrop/"
+_update = {"t": 0.0, "data": None}
+
+
+def parse_ver(s):
+    nums = re.findall(r"\d+", s or "")
+    return tuple(int(x) for x in nums[:3]) or (0,)
+
+
+def check_update(force=False):
+    """Ambil info release terbaru (cache 10 menit). Melempar exception jika gagal."""
+    if not force and _update["data"] and time.time() - _update["t"] < 600:
+        return _update["data"]
+    import urllib.request
+    req = urllib.request.Request(RELEASES_API, headers={
+        "User-Agent": f"LanDrop/{VERSION}", "Accept": "application/vnd.github+json"})
+    with urllib.request.urlopen(req, timeout=8) as r:
+        d = json.load(r)
+    tag = d.get("tag_name") or ""
+    page = d.get("html_url") or RELEASE_PREFIX + "releases/latest"
+    exe = next((a.get("browser_download_url") for a in d.get("assets", [])
+                if (a.get("name") or "").lower().endswith(".exe")), None)
+    if not page.startswith(RELEASE_PREFIX):
+        page = RELEASE_PREFIX + "releases/latest"
+    if not exe or not exe.startswith(RELEASE_PREFIX):
+        exe = page
+    data = {"current": VERSION, "latest": tag.lstrip("vV") or "?",
+            "newer": parse_ver(tag) > parse_ver(VERSION), "page": page, "download": exe}
+    _update.update(t=time.time(), data=data)
+    return data
 
 # ---------------------------------------------------------------- bahasa / language
 LANGS = ("en", "id")
@@ -49,6 +82,7 @@ TEXT = {
         "uninstalled": "LanDrop has been removed.",
         "port_busy": "Port {port} is being used by another application.\n\n{err}",
         "shortcut_desc": "Chat and send files between laptops",
+        "update_fail": "Couldn't check for updates. Check your internet connection.",
     },
     "id": {
         "n_online": "{n} perangkat online", "none_online": "Belum ada perangkat online",
@@ -68,6 +102,7 @@ TEXT = {
         "uninstalled": "LanDrop sudah dihapus.",
         "port_busy": "Port {port} sedang dipakai aplikasi lain.\n\n{err}",
         "shortcut_desc": "Chat dan kirim file antar laptop",
+        "update_fail": "Tidak bisa mengecek update. Periksa koneksi internet.",
     },
 }
 
@@ -608,6 +643,11 @@ class Handler(BaseHTTPRequestHandler):
                 show_about, S.about_shown = not S.about_shown, True
             self.send_json({"me": S.me(), "peers": S.public_peers(), "known": S.cfg["known"],
                             "history": hist, "settings": S.settings(), "show_about": show_about})
+        elif path == "/api/update":
+            try:
+                self.send_json(check_update(force=q.get("force") == "1"))
+            except Exception as e:
+                self.send_json({"error": T("update_fail"), "detail": str(e)[:200]}, 502)
         elif path == "/api/events":
             self.sse()
         elif path.startswith("/api/file/"):
@@ -673,7 +713,10 @@ class Handler(BaseHTTPRequestHandler):
             if path == "/api/settings":
                 return self.api_settings()
             if path == "/api/open-url":
-                url = ABOUT_LINKS.get(self.read_json().get("link", ""))
+                link = self.read_json().get("link", "")
+                upd = _update["data"] or {}
+                url = ABOUT_LINKS.get(link) or {"update": upd.get("download"),
+                                                "release": upd.get("page")}.get(link)
                 if not url:
                     return self.fail(400, T("bad_link"))
                 webbrowser.open(url)
