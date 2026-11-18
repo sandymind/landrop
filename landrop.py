@@ -18,10 +18,15 @@ import time
 import urllib.parse
 import uuid
 import webbrowser
+from concurrent.futures import ThreadPoolExecutor
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 APP = "LanDrop"
-VERSION = "1.1.0"
+VERSION = "1.2.0"
+ALL = "all"  # id percakapan "Semua perangkat"
+# link yang boleh dibuka dari halaman About (di browser default)
+ABOUT_LINKS = {"website": "http://sandymind.my.id/", "donate": "https://saweria.co/sandymind",
+               "github": "https://github.com/sandymind/landrop"}
 HTTP_PORT = int(os.environ.get("LANDROP_PORT", "47801"))
 UDP_PORT = int(os.environ.get("LANDROP_UDP", "47800"))
 DATA_DIR = os.environ.get("LANDROP_DATA") or os.path.join(
@@ -262,6 +267,7 @@ def tray_menu():
         ("Jalankan saat Windows menyala", lambda: (set_autostart(not auto),
                                                     S.emit("settings", {"settings": S.settings(), "me": S.me()})), auto),
         None,
+        ("Tentang LanDrop", lambda: open_window("#about")),
         ("Keluar", quit_app),
     ]
 
@@ -357,6 +363,46 @@ def peer_request(ip, port, method, path, body=None, timeout=15):
     return json.loads(raw or b"{}")
 
 
+def file_headers(length, name, mime, m):
+    return {"Content-Length": str(length), "Content-Type": "application/octet-stream",
+            "X-LanDrop-Auth": S.auth(), "X-From": S.cfg["id"],
+            "X-From-Name": urllib.parse.quote(S.cfg["name"]),
+            "X-Name": urllib.parse.quote(name), "X-Mime": mime,
+            "X-Msg-Id": m["id"], "X-Ts": str(m["ts"])}
+
+
+def post_file(p, path, length, name, mime, m, on_chunk):
+    """Kirim file dari disk ke satu perangkat."""
+    conn = http.client.HTTPConnection(p["ip"], p["port"], timeout=60)
+    try:
+        conn.putrequest("POST", "/peer/file")
+        for k, v in file_headers(length, name, mime, m).items():
+            conn.putheader(k, v)
+        conn.endheaders()
+        with open(path, "rb") as f:
+            while True:
+                chunk = f.read(CHUNK)
+                if not chunk:
+                    break
+                conn.send(chunk)
+                on_chunk(len(chunk))
+        r = conn.getresponse()
+        body = r.read()
+        if r.status != 200:
+            raise IOError(f"ditolak penerima: {body[:200].decode(errors='ignore')}")
+    finally:
+        conn.close()
+
+
+def finish_broadcast(m, results):
+    """results: list (nama perangkat, error atau None)."""
+    ok = [n for n, e in results if e is None]
+    bad = [(n, e) for n, e in results if e]
+    status = "sent" if not bad else ("partial" if ok else "failed")
+    S.update_msg(m, status=status, delivered=len(ok), total=len(results),
+                 error="; ".join(f"{n}: {e}" for n, e in bad) or None)
+
+
 # ---------------------------------------------------------------- windows helpers
 def find_edge():
     for base in (os.environ.get("ProgramFiles(x86)"), os.environ.get("ProgramFiles"),
@@ -368,8 +414,8 @@ def find_edge():
     return None
 
 
-def open_window():
-    url = f"http://localhost:{HTTP_PORT}/"
+def open_window(fragment=""):
+    url = f"http://localhost:{HTTP_PORT}/{fragment}"
     edge = find_edge()
     try:
         if edge:
@@ -491,6 +537,8 @@ class Handler(BaseHTTPRequestHandler):
             if not os.path.exists(p):
                 return self.fail(404, "no icon")
             self.serve_file(p, "image/x-icon")
+        elif path == "/sandymind-logo.png":
+            self.serve_file(resource("sandymind-logo.png"), "image/png")
         elif path == "/api/ping":
             self.send_json({"app": APP, "id": S.cfg["id"]})
         elif path == "/api/state":
@@ -562,6 +610,12 @@ class Handler(BaseHTTPRequestHandler):
                 return self.api_send_file(q)
             if path == "/api/settings":
                 return self.api_settings()
+            if path == "/api/open-url":
+                url = ABOUT_LINKS.get(self.read_json().get("link", ""))
+                if not url:
+                    return self.fail(400, "link tidak dikenal")
+                webbrowser.open(url)
+                return self.send_json({"ok": True})
             if path == "/api/open":
                 b = self.read_json()
                 m = S.find_msg(b.get("id", ""))
@@ -625,6 +679,8 @@ class Handler(BaseHTTPRequestHandler):
     def api_send_text(self):
         b = self.read_json()
         pid, text = b.get("peer"), b.get("text", "")
+        if pid == ALL:
+            return self.api_broadcast_text(text)
         m = S.add_msg({"id": uuid.uuid4().hex, "peer": pid, "dir": "out", "type": "text",
                        "text": text, "ts": now_ms(), "status": "sending"})
 
@@ -645,6 +701,8 @@ class Handler(BaseHTTPRequestHandler):
         name = safe_name(q.get("name", "file"))
         mime = q.get("mime") or "application/octet-stream"
         length = int(self.headers.get("Content-Length") or 0)
+        if pid == ALL:
+            return self.api_broadcast_file(name, mime, length)
         m = S.add_msg({"id": uuid.uuid4().hex, "peer": pid, "dir": "out", "type": "file",
                        "name": name, "size": length, "mime": mime, "ts": now_ms(),
                        "status": "sending"})
@@ -660,11 +718,7 @@ class Handler(BaseHTTPRequestHandler):
             p = self.get_peer(pid)
             conn = http.client.HTTPConnection(p["ip"], p["port"], timeout=60)
             conn.putrequest("POST", "/peer/file")
-            for k, v in {"Content-Length": str(length), "Content-Type": "application/octet-stream",
-                         "X-LanDrop-Auth": S.auth(), "X-From": S.cfg["id"],
-                         "X-From-Name": urllib.parse.quote(S.cfg["name"]),
-                         "X-Name": urllib.parse.quote(name), "X-Mime": mime,
-                         "X-Msg-Id": m["id"], "X-Ts": str(m["ts"])}.items():
+            for k, v in file_headers(length, name, mime, m).items():
                 conn.putheader(k, v)
             conn.endheaders()
             done, last, t0 = 0, 0.0, time.time()
@@ -697,6 +751,89 @@ class Handler(BaseHTTPRequestHandler):
                 tee.close()
             if conn:
                 conn.close()
+
+    # --- kirim ke semua perangkat online sekaligus
+    def api_broadcast_text(self, text):
+        targets = S.public_peers()
+        if not targets:
+            return self.fail(409, "Tidak ada perangkat online")
+        m = S.add_msg({"id": uuid.uuid4().hex, "peer": ALL, "dir": "out", "type": "text",
+                       "text": text, "ts": now_ms(), "status": "sending",
+                       "targets": [p["name"] for p in targets]})
+
+        def one(p):
+            try:
+                peer_request(p["ip"], p["port"], "POST", "/peer/text",
+                             {"id": m["id"], "text": text, "ts": m["ts"]})
+                return p["name"], None
+            except Exception as e:
+                return p["name"], str(e)
+
+        def work():
+            with ThreadPoolExecutor(max_workers=len(targets)) as ex:
+                finish_broadcast(m, list(ex.map(one, targets)))
+        threading.Thread(target=work, daemon=True).start()
+        self.send_json({"ok": True, "id": m["id"]})
+
+    def api_broadcast_file(self, name, mime, length):
+        targets = S.public_peers()
+        if not targets:
+            return self.fail(409, "Tidak ada perangkat online")
+        mid = uuid.uuid4().hex
+        sent_dir = os.path.join(DATA_DIR, "sent")
+        os.makedirs(sent_dir, exist_ok=True)
+        path = os.path.join(sent_dir, mid + "_" + name)
+        m = S.add_msg({"id": mid, "peer": ALL, "dir": "out", "type": "file", "name": name,
+                       "size": length, "mime": mime, "ts": now_ms(), "status": "sending",
+                       "targets": [p["name"] for p in targets]})
+        # 1) simpan dulu upload dari jendela (lokal, cepat) agar bisa dikirim paralel
+        try:
+            with open(path, "wb") as f:
+                done = 0
+                while done < length:
+                    chunk = self.rfile.read(min(CHUNK, length - done))
+                    if not chunk:
+                        raise IOError("upload terputus")
+                    f.write(chunk)
+                    done += len(chunk)
+        except Exception as e:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+            S.update_msg(m, status="failed", error=str(e))
+            return self.send_json({"ok": False, "error": str(e)}, 502)
+        # 2) kirim ke semua perangkat bersamaan, progress digabung
+        total = length * len(targets)
+        state = {"done": 0, "last": 0.0, "t0": time.time()}
+        lock = threading.Lock()
+
+        def on_chunk(n):
+            with lock:
+                state["done"] += n
+                if time.time() - state["last"] > 0.25:
+                    state["last"] = time.time()
+                    S.emit("progress", {"id": mid, "done": state["done"], "total": total,
+                                        "speed": state["done"] / max(time.time() - state["t0"], 0.001)})
+
+        def one(p):
+            try:
+                post_file(p, path, length, name, mime, m, on_chunk)
+                return p["name"], None
+            except Exception as e:
+                return p["name"], str(e)
+
+        with ThreadPoolExecutor(max_workers=len(targets)) as ex:
+            results = list(ex.map(one, targets))
+        if mime.startswith("image/") and length <= 30 * 1024 * 1024:
+            m["path"] = path  # simpan agar gambar tampil di chat
+        else:
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+        finish_broadcast(m, results)
+        self.send_json({"ok": True, "id": mid})
 
     def sender(self):
         pid = self.headers.get("X-From", "")

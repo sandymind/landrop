@@ -103,6 +103,23 @@ input,textarea{font:inherit;color:inherit}
 .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;place-items:center;z-index:15;cursor:zoom-out}
 .lightbox.show{display:grid}
 .lightbox img{max-width:94vw;max-height:94vh}
+.avatar.all{background:var(--accent);color:#fff}
+.peer-sep{height:1px;background:var(--line);margin:6px 10px}
+.meta .warn{color:#c47f00}
+.about{text-align:center;width:min(420px,92vw);padding:30px 28px 22px}
+.about .sm-logo{width:200px;max-width:70%;display:block;margin:4px auto 22px}
+@media (prefers-color-scheme: dark){ .about .sm-logo{filter:invert(1)} }
+.about .app{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:4px}
+.about .app img{width:30px;height:30px}
+.about .app b{font-size:20px}
+.about .ver{color:var(--muted);font-size:13px;margin-bottom:14px}
+.about p{margin:0 0 18px;color:var(--text);line-height:1.55}
+.about .links{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
+.about .links button{display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--bg);font-weight:600}
+.about .links button:hover{border-color:var(--accent);color:var(--accent)}
+.about .links .donate{background:#faae2b;border-color:#faae2b;color:#1d2330}
+.about .links .donate:hover{background:#ffbd4a;border-color:#ffbd4a;color:#1d2330}
+.about small{color:var(--muted);font-size:12px}
 .offline-note{font-size:12px;color:var(--muted);text-align:center;padding:4px 0 0}
 </style>
 </head>
@@ -111,6 +128,9 @@ input,textarea{font:inherit;color:inherit}
   <div class="me">
     <div class="logo">⇄</div>
     <div class="who"><b id="myName">LanDrop</b><small id="myIp"></small></div>
+    <button class="iconbtn" id="aboutBtn" title="Tentang LanDrop">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+    </button>
     <button class="iconbtn" id="settingsBtn" title="Pengaturan">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
@@ -172,6 +192,20 @@ input,textarea{font:inherit;color:inherit}
     <small style="color:var(--muted);display:block;margin-top:12px" id="ver"></small>
   </div>
 </div>
+<div class="modal-bg" id="about">
+  <div class="modal about">
+    <img class="sm-logo" src="/sandymind-logo.png" alt="Sandy Mind">
+    <div class="app"><img src="/icon.ico" alt=""><b>LanDrop</b></div>
+    <div class="ver" id="aboutVer">Versi</div>
+    <p>Chat dan kirim file antar laptop Windows di jaringan yang sama, semudah AirDrop. Tanpa flashdisk, tanpa setting share folder, tanpa internet. Kirim teks, gambar, dan file ke satu atau semua perangkat sekaligus.</p>
+    <div class="links">
+      <button data-link="website">🌐 Website Sandy Mind<span style="font-weight:400;color:var(--muted)">sandymind.my.id</span></button>
+      <button data-link="donate" class="donate">☕ Dukung via Saweria</button>
+    </div>
+    <small>© 2026 Sandy Mind · Dibuat di Palu</small><br>
+    <button class="btn" id="closeAbout" style="margin-top:14px">Tutup</button>
+  </div>
+</div>
 <div class="lightbox" id="lightbox"><img id="lightImg" alt=""></div>
 <div class="toast" id="toast"></div>
 
@@ -194,20 +228,34 @@ async function api(path, body){
 }
 
 // ---------- peers list
-function peerName(id){ return st.peers[id]?.name || st.known[id] || 'Perangkat'; }
+const ALL = 'all';
+const ALL_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+const onlineCount = ()=>Object.keys(st.peers).length;
+const isOnline = id => id===ALL ? onlineCount()>0 : !!st.peers[id];
+function peerName(id){ return id===ALL ? 'Semua perangkat' : (st.peers[id]?.name || st.known[id] || 'Perangkat'); }
+function avatarHtml(id){
+  return id===ALL ? `<div class="avatar all">${ALL_ICON}</div>`
+    : `<div class="avatar">${esc(initials(peerName(id)))}<span class="dot ${st.peers[id]?'on':''}"></span></div>`;
+}
+function peerRow(id, sub){
+  return `<button class="peer ${id===st.current?'active':''}" data-id="${esc(id)}">${avatarHtml(id)}
+      <div class="info"><b>${esc(peerName(id))}</b><small>${esc(sub)}</small></div>
+      ${st.unread[id]?`<span class="badge">${st.unread[id]}</span>`:''}</button>`;
+}
 function renderPeers(){
   const ids = new Set([...Object.keys(st.peers), ...st.history.map(m=>m.peer)]);
+  ids.delete(ALL);
   const lastTs = {};
   for(const m of st.history) lastTs[m.peer] = Math.max(lastTs[m.peer]||0, m.ts);
   const list = [...ids].filter(Boolean).sort((a,b)=> (!!st.peers[b]-!!st.peers[a]) || ((lastTs[b]||0)-(lastTs[a]||0)));
   if(!list.length){ $('peers').innerHTML = '<div class="empty-peers">Mencari perangkat di jaringan…<br><br>Pastikan LanDrop terbuka di laptop lain, terhubung ke jaringan yang sama, dan memakai kunci pasangan yang sama.</div>'; return; }
-  $('peers').innerHTML = list.map(id=>{
+  const n = onlineCount();
+  const allRow = (n || st.history.some(m=>m.peer===ALL))
+    ? peerRow(ALL, n ? `Kirim ke ${n} perangkat online` : 'Tidak ada perangkat online') + '<div class="peer-sep"></div>' : '';
+  $('peers').innerHTML = allRow + list.map(id=>{
     const p = st.peers[id], last = [...st.history].reverse().find(m=>m.peer===id);
     const sub = last ? (last.type==='text' ? last.text : '📎 '+last.name) : (p ? p.ip : '');
-    return `<button class="peer ${id===st.current?'active':''}" data-id="${esc(id)}">
-      <div class="avatar">${esc(initials(peerName(id)))}<span class="dot ${p?'on':''}"></span></div>
-      <div class="info"><b>${esc(peerName(id))}</b><small>${esc(sub)}</small></div>
-      ${st.unread[id]?`<span class="badge">${st.unread[id]}</span>`:''}</button>`;
+    return peerRow(id, sub);
   }).join('');
   document.querySelectorAll('.peer').forEach(b=>b.onclick=()=>select(b.dataset.id));
 }
@@ -220,9 +268,14 @@ function select(id){
 function renderHead(){
   const id = st.current; if(!id) return; const p = st.peers[id];
   $('headName').textContent = peerName(id);
-  $('headAvatar').innerHTML = esc(initials(peerName(id))) + `<span class="dot ${p?'on':''}"></span>`;
-  $('headSub').textContent = p ? `Online · ${p.ip}` : 'Offline — pesan tidak bisa dikirim sampai perangkat online';
-  $('sendBtn').disabled = !p;
+  $('headAvatar').outerHTML = avatarHtml(id).replace('<div class="avatar', '<div id="headAvatar" class="avatar');
+  if(id===ALL){
+    const names = Object.values(st.peers).map(p=>p.name);
+    $('headSub').textContent = names.length ? `Pesan & file dikirim ke ${names.length} perangkat: ${names.join(', ')}` : 'Tidak ada perangkat online';
+  } else {
+    $('headSub').textContent = p ? `Online · ${p.ip}` : 'Offline — pesan tidak bisa dikirim sampai perangkat online';
+  }
+  $('sendBtn').disabled = !isOnline(id);
 }
 
 // ---------- messages
@@ -231,7 +284,7 @@ function msgHtml(m){
   let body;
   if(m.type==='text'){
     body = `<div class="bubble">${linkify(m.text)}</div>`;
-  } else if((m.mime||'').startsWith('image/') && m.path && (m.status==='received'||m.status==='sent')){
+  } else if((m.mime||'').startsWith('image/') && m.path && ['received','sent','partial'].includes(m.status)){
     body = `<div class="bubble img"><img src="/api/file/${m.id}" data-id="${m.id}" alt="${esc(m.name)}" loading="lazy"></div>`;
   } else {
     const ext = (m.name.split('.').pop()||'').slice(0,4).toUpperCase();
@@ -244,13 +297,16 @@ function msgHtml(m){
   }
   const acts = [];
   if(m.type==='text') acts.push(`<button data-act="copy" data-id="${m.id}">Salin</button>`);
-  if(m.type==='file' && m.path && (m.status==='received'||m.status==='sent')){
+  if(m.type==='file' && m.path && ['received','sent','partial'].includes(m.status)){
     if((m.mime||'').startsWith('image/')) acts.push(`<button data-act="copyimg" data-id="${m.id}">Salin gambar</button>`);
     acts.push(`<button data-act="open" data-id="${m.id}">Buka</button>`);
     acts.push(`<button data-act="folder" data-id="${m.id}">Tampilkan di folder</button>`);
   }
   const status = m.status==='failed' ? `<span class="bad" title="${esc(m.error||'')}">Gagal${m.error?': '+esc(m.error).slice(0,80):''}</span>`
-    : m.status==='sending' ? 'Mengirim…' : m.status==='receiving' ? 'Menerima…' : m.dir==='out' ? '✓ Terkirim' : '';
+    : m.status==='partial' ? `<span class="warn" title="${esc(m.error||'')}">⚠ Terkirim ke ${m.delivered}/${m.total} perangkat</span>`
+    : m.status==='sending' ? (m.targets ? `Mengirim ke ${m.targets.length} perangkat…` : 'Mengirim…')
+    : m.status==='receiving' ? 'Menerima…'
+    : m.dir==='out' ? (m.peer===ALL ? `<span title="${esc((m.targets||[]).join(', '))}">✓ Terkirim ke ${m.delivered ?? (m.targets||[]).length} perangkat</span>` : '✓ Terkirim') : '';
   return `<div class="row ${m.dir}" id="m-${m.id}">${body}<div class="meta"><span>${fmtTime(m.ts)}</span>${status?`<span>${status}</span>`:''}${acts.join('')}</div></div>`;
 }
 function renderMsgs(scroll){
@@ -294,14 +350,14 @@ async function copyImage(m){
 // ---------- sending
 async function sendText(){
   const t = $('input').value; if(!t.trim() || !st.current) return;
-  if(!st.peers[st.current]){ toast('Perangkat sedang offline'); return; }
+  if(!isOnline(st.current)){ toast(st.current===ALL ? 'Tidak ada perangkat online' : 'Perangkat sedang offline'); return; }
   $('input').value=''; autosize();
   try{ await api('/api/send-text',{peer:st.current, text:t}); }catch(e){ toast('Gagal: '+e.message); }
 }
 const queueFiles = []; let sending = false;
 function sendFiles(files){
   if(!st.current){ toast('Pilih perangkat dulu'); return; }
-  if(!st.peers[st.current]){ toast('Perangkat sedang offline'); return; }
+  if(!isOnline(st.current)){ toast(st.current===ALL ? 'Tidak ada perangkat online' : 'Perangkat sedang offline'); return; }
   for(const f of files) queueFiles.push({f, peer:st.current});
   pump();
 }
@@ -370,6 +426,18 @@ $('addManual').onclick = async ()=>{
   const r = await api('/api/settings',{add_manual:v}); st.settings=r.settings; $('sManual').value=''; fillSettings(); toast('Ditambahkan, menghubungkan…');
 };
 $('openSaveDir').onclick = ()=>api('/api/open',{what:'savedir'});
+
+// ---------- about
+function showAbout(){
+  $('aboutVer').textContent = 'Versi ' + (st.me?.version || '');
+  $('about').classList.add('show');
+}
+$('aboutBtn').onclick = showAbout;
+$('closeAbout').onclick = ()=>{ $('about').classList.remove('show'); if(location.hash==='#about') history.replaceState(null,'',location.pathname); };
+$('about').addEventListener('click', e=>{ if(e.target.id==='about') $('closeAbout').onclick(); });
+document.querySelectorAll('#about [data-link]').forEach(b=>b.onclick=()=>api('/api/open-url',{link:b.dataset.link}).catch(err=>toast('Gagal: '+err.message)));
+window.addEventListener('hashchange', ()=>{ if(location.hash==='#about') showAbout(); });
+document.addEventListener('keydown', e=>{ if(e.key==='Escape'){ $('about').classList.remove('show'); $('settings').classList.remove('show'); $('lightbox').classList.remove('show'); } });
 $('quitBtn').onclick = async ()=>{
   if(!confirm('Keluar dari LanDrop? Laptop ini tidak akan bisa menerima file sampai LanDrop dibuka lagi.')) return;
   await api('/api/quit',{}).catch(()=>{}); document.body.innerHTML='<div class="placeholder">LanDrop sudah ditutup. Jendela ini boleh ditutup.</div>';
@@ -392,6 +460,7 @@ async function boot(){
   st.peers = Object.fromEntries(s.peers.map(p=>[p.id,p]));
   $('myName').textContent = s.me.name; $('myIp').textContent = (s.me.ips||[])[0] || 'tidak ada jaringan';
   renderPeers();
+  if(location.hash==='#about') showAbout();
   if(st.current) select(st.current); else { const first = Object.keys(st.peers)[0]; if(first) select(first); }
 }
 const es = new EventSource('/api/events');

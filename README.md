@@ -2,6 +2,8 @@
 
 Chat dan kirim file antar laptop Windows di jaringan yang sama (Wi-Fi/LAN), mirip AirDrop / Quick Share.
 
+Dibuat oleh **Sandy Mind** · [sandymind.my.id](http://sandymind.my.id/) · Dukung pengembangan lewat [Saweria](https://saweria.co/sandymind) ☕
+
 ## Install di setiap laptop
 1. Salin `dist\LanDrop.exe` ke laptop (sekali saja: lewat flashdisk, email, atau Google Drive).
 2. Klik dua kali `LanDrop.exe` → pilih **Yes** untuk install.
@@ -16,7 +18,9 @@ Setelah laptop baru ter-install, selanjutnya cukup kirim `LanDrop.exe` versi bar
 - **Teks**: ketik lalu Enter. Klik **Salin** pada pesan untuk menyalin ke clipboard.
 - **Gambar/screenshot**: tekan **Ctrl+V** di jendela chat (misalnya setelah Win+Shift+S).
 - **File**: drag & drop ke jendela chat, atau tombol **+**. Ukuran tidak dibatasi.
+- **Kirim ke semua perangkat**: pilih **Semua perangkat** di paling atas daftar. Teks, gambar, dan file dikirim ke semua laptop yang online sekaligus. Jika ada yang gagal, pesan ditandai ⚠ "Terkirim ke 1/2 perangkat" (arahkan kursor untuk melihat penyebabnya).
 - File diterima tersimpan di `Downloads\LanDrop` (bisa diubah di Pengaturan ⚙).
+- **Tentang LanDrop**: tombol ⓘ di samping ⚙, atau klik kanan tray → Tentang LanDrop.
 - Menutup jendela tidak mematikan LanDrop — tetap bisa menerima file, dan icon ⇄ tetap ada di tray taskbar.
 
 ## Tray icon
